@@ -22,12 +22,20 @@
 % I/
 %    <scenario> scenario file (in VTS format) path must be given in datapath below
 %               see User Manual to set the scenario file
-     datapath='../ifod_tests/';
 % O/
 %    <results> comparison between actual and reconstructed trajectories
 %              (VTS format, prefixed as requested in <scenario>)
 
-%function [data]=data_extraction()
+% Procedures and function due to be called from the path of "ifod"
+addpath('../ifod');
+% reference_trajectory.m
+% slctEpochs.m
+% extractObs.m
+% prepareObs.m
+% computeSolution.m
+% 
+%-----------------------------------------
+datapath='../ifod_tests/';
 
 data=[];
 MJD_0=2400000.5;
