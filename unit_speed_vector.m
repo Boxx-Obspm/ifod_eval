@@ -14,6 +14,6 @@
 % 2. Outputs:
 %   vel1 : unit speed vector of velocity1
 
-function[vel1]=unit_speed_vector(ii,velocity1)
-	vel1=[velocity1(ii,1);velocity1(ii,2);velocity1(ii,3)]/norm(velocity1(ii,1:3));
+function [uvel]=unit_speed_vector(ii,velocity)
+	uvel = [velocity(ii,1); velocity(ii,2); velocity(ii,3)] ./ norm(velocity(ii,1:3));
 end
