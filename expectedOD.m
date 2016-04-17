@@ -1,25 +1,24 @@
 %%----------------HEADER---------------------------%%
 %Author:           Boris Segret
 %Version & Date:
-%                  Vxx dd-mm-2016 (dd-mm-yyyy)
+%                  V2.2 31-03-2016 (dd-mm-yyyy)
 %                  - use direct epochs values instead of indices
-%                  - agregates former "test_interpolation" and "Calculate_Xexpected"
+%                  (agregates former "test_interpolation" and "Calculate_Xexpected")
 %                  V2.1 05-02-2016 (dd-mm-yyyy), Boris Segret
 %                  - *no* call to reference_trajectory.m
 %                  - *no* changes of the inputs
 %                  until V2 11-09-2015 Oussema SLEIMI & Tristan Mallet
-% CL=1
+% CL=2
 %
-% Ideally the inflightOD shall return X19, given here from the ref. & the actual
-% trajectories (for tests only) interpolated at the dates of observations
+% Ideally the ifod should return X19 as given here from the knownledge of both
+% the ref. & the actual trajectories (for tests only) interpolated at the dates of observations
 %
 % 1. Input:
 %     <ref_trajectory>
 %     epochs    = 4-vector of dates of observations
 %     <actual_trajectory>
 % 2. Outputs:
-%     X19: 19-vector of expected result for the vector of unknowns (km and km/s)
-%     (note: velocities are input in m/s and output in km/s)
+%     X19: 19-vector of the expected result for the vector of unknowns (km and km/s)
 
 function X19 = expectedOD(TimeList0, NbLE0, TimeListE0, dist0, coord0, vel0, ...
                      epochs, nbofBodies, ...

@@ -1,7 +1,9 @@
 %%----------------HEADER---------------------------%%
 %Author:           Tristan Mallet
-%Version & Date:   V1 11-09-2015 (dd/mm/yyyy)
-%CL=1
+%Version & Date:   V1.1 31-03-2016 (dd/mm/yyyy)
+%                  (v1.1 by Boris Segret, only to clarify some details)
+%Version & Date:   V1.0 11-09-2015 (dd/mm/yyyy) by Tristan Mallet
+%CL=2
 %
 %
 % This function gives the velocity vector with a norm equal to 1

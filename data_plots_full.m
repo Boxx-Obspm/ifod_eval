@@ -1,25 +1,23 @@
 %%----------------HEADER---------------------------%%
 %Author:           Boris Segret
-%Version & Date:   V1.0 27-03-2016 (dd/mm/yyyy)
-%                  - forked from data_plots
-%CL=1
+%Version & Date:   V2.1 11-04-2016 (dd/mm/yyyy)
+%                  - specific plots for quick analysis of results
+%                  - adapted to output files produced by data_extraction.m in version v2.1
+%                  REMAINING ISSUE: some figures are not compatible with multiple foreground objects
+%                  (forked from data_plots.m)
+%CL=2
 %                  V1 11-09-2015 (dd/mm/yyyy) Tristan Mallet
 %
 %
 % This program plots the critical outputs from the dataExtraction file.
 %
-% 1. Inputs:
-%    The name of the result file to read
-%    k : the column that we want to plot
+% 1. Inputs: fname = name of the result file to read (in the workspace)
 %
-% 2. Outputs:
-%    plots= this program will plot the k column with ii as the x-axis
-%    (if k in 16..34, then it also plots the expected value, i.e. k+19)
+% 2. Outputs: some plots
+%
 
-%function [data]=data_plots_full(fname)
 fname = outputs;
 
-%fname=input('Full quick analysis - Results file name : ','s');
 plot_file=fopen(fname,'rt');
 l=' ';
 while 1
@@ -34,19 +32,16 @@ while 1
 end;
 
 data=fscanf(plot_file, '%g', [53 inf]); data=data';
-%data=dlmread(plot_file); %we read it from the META_STOP tag.
 fclose(plot_file);
 tt = -data(1,1)+data(:,1)+data(:,2)/86400.;
 mm = median(abs(data));
 
-%OnePlotList = [9; 10];
-%TwoPlotList = [7,3; 8,4; 16,35; 17,36; 18,37; 28,28+19; 32,32+19; 33,33+19; 34,53];
 
 figure(1); clf; % (transversal & longitudinal shifts)
 %----------------------------------------------------
 subplot(9,3,[1  3]); axis([-1 1 -1 1]);
 text(0,0,ttl,'FontWeight','bold', 'horizontalalignment','center'); set(gca, 'Visible', 'off');
-subplot(9,3,[4 13]); hold on; plot(tt, data(:,7), '-b', tt, data(:,3), '-k');
+subplot(9,3,[4 13]); hold on; plot(tt, data(:,7), 'ob', tt, data(:,3), 'xk');
 idy=find(abs(data(:,7))<=2*mm(7)); mn1=mean(data(idy,7)); sg1 = max([1 std(data(idy,7))]); ylim([mn1-3*sg1 mn1+3*sg1]);
 ylabel('shift to Reference (km)'); title('Transversal shift');
 legend('reconstructed', 'expected');
@@ -56,7 +51,7 @@ idy=find(abs(data(:,7)-data(:,3))<=mm(3)+mm(7)); mn1=mean(data(idy,7)-data(idy,3
 xlabel('time (days)'); ylabel('shift difference (km)');
 set(gca, 'XColor', 'm'); set(gca, 'YColor', 'm');
 
-subplot(9,3,[5 14]); hold on; plot(tt, data(:,8), '-b', tt, data(:,4), '-k');
+subplot(9,3,[5 14]); hold on; plot(tt, data(:,8), 'ob', tt, data(:,4), 'xk');
 idy=find(abs(data(:,8))<=2*mm(8)); mn2=mean(data(idy,8)); sg2 = max([1 std(data(idy,8))]); ylim([mn2-3*sg2 mn2+3*sg2]);
 ylabel('shift to Reference (km)'); title('Longitudinal shift');
 legend('reconstructed', 'expected');
@@ -67,13 +62,13 @@ ylim([mn2-3*sg2 mn2+3*sg2]);
 xlabel('time (days)'); ylabel('shift difference (km)');
 set(gca, 'XColor', 'm'); set(gca, 'YColor', 'm');
 
-subplot(9,3,[6 15]); hold on; plot(data(:,7), data(:,8), 'ob', data(:,3), data(:,4), 'ok');
+subplot(9,3,[6 15]); hold on; plot(data(:,7), data(:,8), 'ob', data(:,3), data(:,4), 'xk');
 mn=mean(data(:,3)); mn1=(mn1+mn)/2.; sg1=max([sg1 abs(mn1-mn)]); xlim([mn1-sg1 mn1+sg1]);
 mn=mean(data(:,4)); mn2=(mn2+mn)/2.; sg2=max([sg2 abs(mn2-mn)]); ylim([mn2-sg2 mn2+sg2]);
 xlabel('Transversal shift (km)'); ylabel('Longitudinal shift (km)'); title('(Longit.,Transv.) shifts');
 legend('reconstructed', 'expected');
 set(gca, 'XColor', 'm'); set(gca, 'YColor', 'm');
-subplot(9,3,[18 27]); hold on; plot(data(:,7)-data(:,3), data(:,8)-data(:,4), 'or');
+subplot(9,3,[18 27]); hold on; plot(data(:,7)-data(:,3), data(:,8)-data(:,4), '*r');
 mn1=mean(data(:,7)-data(:,3)); sg1=max([.001 std(data(:,7)-data(:,3))]); xlim([mn1-3*sg1 mn1+3*sg1]);
 mn2=mean(data(:,8)-data(:,4)); sg2=max([.001 std(data(:,8)-data(:,4))]); ylim([mn2-3*sg2 mn2+3*sg2]);
 xlabel('Transversal diff. (km)'); ylabel('Longitudinal diff (km)');
@@ -84,36 +79,36 @@ figure(2); clf; % (dX, Vx; dY,Vy; dZ,Vz)
 subplot(7,2,[ 1  2]); axis([-1 1 -1 1]);
 text(0,0,ttl,'FontWeight','bold', 'horizontalalignment','center'); set(gca, 'Visible', 'off');
 %
-subplot(7,2,[ 3  5]); hold on; plot(tt, data(:,16), '-b', tt, data(:,35), '-k');
+subplot(7,2,[ 3  5]); hold on; plot(tt, data(:,16), 'ob', tt, data(:,35), 'xk');
 idy=find(abs(data(:,16))<=2*mm(16)); mn1=mean(data(idy,16)); sg1 = max([1 std(data(idy,16))]); ylim([mn1-3*sg1 mn1+3*sg1]);
 %xlabel('time (days)');
 ylabel('dX (km)');    legend('reconstructed', 'expected');
 set(gca, 'XColor', 'm'); set(gca, 'YColor', 'm');
 %
-subplot(7,2,[ 7  9]); hold on; plot(tt, data(:,17), '-b', tt, data(:,36), '-k');
+subplot(7,2,[ 7  9]); hold on; plot(tt, data(:,17), 'ob', tt, data(:,36), 'xk');
 idy=find(abs(data(:,17))<=2*mm(17)); mn1=mean(data(idy,17)); sg1 = max([1 std(data(idy,17))]); ylim([mn1-3*sg1 mn1+3*sg1]);
 %xlabel('time (days)');
 ylabel('dY (km)');    legend('reconstructed', 'expected');
 set(gca, 'XColor', 'm'); set(gca, 'YColor', 'm');
 %
-subplot(7,2,[11 13]); hold on; plot(tt, data(:,18), '-b', tt, data(:,37), '-k');
+subplot(7,2,[11 13]); hold on; plot(tt, data(:,18), 'ob', tt, data(:,37), 'xk');
 idy=find(abs(data(:,18))<=2*mm(18)); mn1=mean(data(idy,18)); sg1 = max([1 std(data(idy,18))]); ylim([mn1-3*sg1 mn1+3*sg1]);
 xlabel('time (days)'); ylabel('dZ (km)');    legend('reconstructed', 'expected');
 set(gca, 'XColor', 'm'); set(gca, 'YColor', 'm');
 %
-subplot(7,2,[ 4  6]); hold on; plot(tt, data(:,32), '-b', tt, data(:,51), '-k');
+subplot(7,2,[ 4  6]); hold on; plot(tt, data(:,32), 'ob', tt, data(:,51), 'xk');
 idy=find(abs(data(:,32))<=2*mm(32)); mn1=mean(data(idy,32)); sg1 = max([.0001 std(data(idy,32))]); ylim([mn1-3*sg1 mn1+3*sg1]);
 %xlabel('time (days)');
 ylabel('dVx (km/s)'); legend('reconstructed', 'expected');
 set(gca, 'XColor', 'm'); set(gca, 'YColor', 'm');
 %
-subplot(7,2,[ 8 10]); hold on; plot(tt, data(:,33), '-b', tt, data(:,52), '-k');
+subplot(7,2,[ 8 10]); hold on; plot(tt, data(:,33), 'ob', tt, data(:,52), 'xk');
 idy=find(abs(data(:,33))<=2*mm(33)); mn1=mean(data(idy,33)); sg1 = max([.0001 std(data(idy,33))]); ylim([mn1-3*sg1 mn1+3*sg1]);
 %xlabel('time (days)');
 ylabel('dVy (km/s)'); legend('reconstructed', 'expected');
 set(gca, 'XColor', 'm'); set(gca, 'YColor', 'm');
 %
-subplot(7,2,[12 14]); hold on; plot(tt, data(:,34), '-b', tt, data(:,53), '-k');
+subplot(7,2,[12 14]); hold on; plot(tt, data(:,34), 'ob', tt, data(:,53), 'xk');
 idy=find(abs(data(:,34))<=2*mm(34)); mn1=mean(data(idy,34)); sg1 = max([.0001 std(data(idy,34))]); ylim([mn1-3*sg1 mn1+3*sg1]);
 xlabel('time (days)'); ylabel('dVz (km/s)'); legend('reconstructed', 'expected');
 set(gca, 'XColor', 'm'); set(gca, 'YColor', 'm');
@@ -165,4 +160,3 @@ ff=[scn '_lglt.png']; print(5,ff,'-dpng');
 %ff=[scn '_uniV.svg']; print(4,ff,'-dsvg');
 %ff=[scn '_lglt.svg']; print(5,ff,'-dsvg');
 
-%end

@@ -1,51 +1,45 @@
 %%----------------HEADER---------------------------%%
 %Author:           Boris Segret
-version = '2.0';
-%Version & Date:
-%                  Vxxx dd-mm-2016 (dd-mm-yyyy)
-%                  - create a "prodObs" module (Produce Observable)
-%                  - call the solution based on Observables only
-%                  - multiple Ephemeride files
-%                  - (to be done) RECTIFY header in the results files
-%Version & Date:
+version = '2.1';
+% Version & Date:
+%                  V2.1 10-04-2016 (dd-mm-yyyy)
+%                  - inputs & outputs in VTS format only
+%                  - separeted "in-flight" and "test" modules, here only "test"
+%                  - multiple foreground bodies
+%                  - rectified header in the results files & added a verion number
+%                  - REMAINING ISSUE: some output colums are not adapted to several foreground bodies
+%                  - REMAINING ISSUE: the outputs are not adapted to monte carlo statistics
+% Version & Date:
 %                  V1.2 03-03-2016, Boris Segret
 %                  - *no* multiple calls of reference_trajectory.m
 %                  - new "scenario" format, and computes only in an interval
 %                  - minor adapations
 %                  - works with a call from "ifod_tests"
 %                  until V1   11-09-2015, Tristan Mallet
-%CL=2
+% CL=2
 %
 %
-% This produces a timestep-by-timestep comparison between the actual trajectory,
-% slightly different from a reference trajectory, and the trajectory that is
-% reconstructed by the ifod on the solely basis of the (lat,long) of foreground
-% bodies.
+% This produces a comparison at every time step between the computed and the expected
+% results. The assumption is to input a reference trajectory with its ephemerides for a
+% number of foreground objetcs, and a slightly shifted trajectory with  its ephemerides
+% for the same foreground objects. All results are produced in the current workspace for
+% easy access afterwards. A "scenario" file drives the computation.
 %
 % I/
 %    <scenario> scenario file (in VTS format) path must be given in datapath below
 %               see User Manual to set the scenario file
 %    datapath : path for the "scenario" file, it *must* be provided in the workspace
 % O/
-%    <results> comparison between actual and reconstructed trajectories
-%              (VTS format, prefixed as requested in <scenario>)
+%    <results> comparison between computed and expected results (VTS format,
+%              prefixed as requested in <scenario>)
 
-% Procedures and function due to be called from the path of "ifod"
 addpath('../ifod');
-% reference_trajectory.m
-% slctEpochs.m
-% extractObs.m
-% prepareObs.m
-% computeSolution.m
-% 
 %-----------------------------------------
 
 
 data=[];
 MJD_0=2400000.5;
 SEC_0=86400;
-%for n=0 : 5 scenario=fopen(strcat('./Inputs/Scenarios/scenario-',num2str(n)),'r')
-%scenario=fopen('./Inputs/Scenarios/scenario-4','r'); #we open the scenario file
 scn=fopen(strcat(datapath, 'scenario'),'r'); %we open the scenario file
 l=' ';
 while 1
@@ -57,20 +51,21 @@ end;
 l='#'; while l=='#' lgn=fgetl(scn); if length(lgn)>0 l=lgn(1); end; end; scenario_num=lgn;
 l='#'; while l=='#' lgn=fgetl(scn); if length(lgn)>0 l=lgn(1); end; end; reftrajectory = strcat(datapath,lgn);
 l='#'; while l=='#' lgn=fgetl(scn); if length(lgn)>0 l=lgn(1); end; end; nbofBodies = str2num(lgn);
+
+% refEphNameLength(i): [path+filename] length of the ephemeris of the i-th foreground body for the reference trajectory
+% refEphemerid: [path+filename] are put one after another
+% actEphNameLength(i): [path+filename] length of the ephemeris of the i-th foreground body for the actual trajectoru
+% actEphemerid: [path+filename] are put one after another
 refEphNameLength(1)=0; refEphemerid='';
 for ii=1:nbofBodies
-    % works with the last listed body only, yet
     l='#'; while l=='#' lgn=fgetl(scn); if length(lgn)>0 l=lgn(1); end; end;
-    %refephemerid = strcat(datapath, lgn(12:length(lgn)));
     refEphNameLength(ii+1)=refEphNameLength(ii)+length(datapath)+length(lgn)-11;
     refEphemerid = [refEphemerid datapath lgn(12:length(lgn))];
 end
 l='#'; while l=='#' lgn=fgetl(scn); if length(lgn)>0 l=lgn(1); end; end; actual_trajectory = strcat(datapath,lgn);
 actEphNameLength(1)=0; actEphemerid='';
 for ii=1:nbofBodies
-    % works with the last listed body only, yet
     l='#'; while l=='#' lgn=fgetl(scn); if length(lgn)>0 l=lgn(1); end; end;
-    %trajectory_name_ephjup = strcat(datapath, lgn(12:length(lgn)));
     actEphNameLength(ii+1)=actEphNameLength(ii)+length(datapath)+length(lgn)-11;
     actEphemerid = [actEphemerid datapath lgn(12:length(lgn))];
 end
@@ -80,17 +75,17 @@ l='#'; while l=='#' lgn=fgetl(scn); if length(lgn)>0 l=lgn(1); end; end; outputs
 l='#'; while l=='#' lgn=fgetl(scn); if length(lgn)>0 l=lgn(1); end; end; simLims = uint32(str2num(lgn));
 fclose(scn);
 
-%Extraction of the trajectory data
-% outputs in same units like trajectories and ephemerides files
-% > TimeList0, TimeList1: in decimal Julian days
-% > lat0, long0, lat1, long1: in DEGREES
-% > distance0, distance1: in km
-% > coordinates0, coordinates1: in km
-% > velocity0, velocity1: in m/s
+%Extraction of the trajectory data, i being the number of a given foreground body
+% > TimeList0(:), TimeList1(:) in decimal JD, time-stamped of the trajectories ("0" ref & "1" actual)
+% > NbLT0, NbLT1: Nb of lines in the trajectory files
+% > NbLE0(i), NbLE1(i): Nb of lines in the ephemeris files
+% > TimeListE0(i,:), TimeListE1(i,:) in decimal JD, time-stamped of the ephemeris files ("0" ref & "1" actual)
+% > lat0(i,:), long0(i,:), lat1(i,:), long1(i,:) in DEGREES
+% > dist0(i,:), dist1(i,:) in km
+% > coord0(:), coord1(:): in km
+% > vel0(:), vel(:): in m/s
 
-%[TimeList0,lat0,long0,distance0,coordinates0,velocity0]=reference_trajectory(reftrajectory, refephemerid);
 [NbLT0, TimeList0, coord0, vel0] = readTraj(reftrajectory);
-%[TimeList1,lat1,long1,distance1,coordinates1,velocity1]=actual_trajectory(trajectory_name,trajectory_name_ephjup);
 [NbLT1, TimeList1, coord1, vel1] = readTraj(actual_trajectory);
 for ii=1:nbofBodies
   [NbLE0(ii), TimeListE0(ii,:), lat0(ii,:), long0(ii,:), dist0(ii,:)] = readEphem(refEphemerid(1+refEphNameLength(ii):refEphNameLength(ii+1)));
@@ -146,8 +141,8 @@ fprintf(dataExtraction,'META_STOP\n');
 fclose(dataExtraction);
 %-----------------------------------------
 
-
 Nobs = 4;
+
 observd = double(zeros(Nobs,2)); % observd = [out_lat1 out_long1];
 predict = double(zeros(Nobs,3)); % predict = [out_lat0 out_long0 out_distance0]
 for ii = max([1 simLims(1)]) : simLims(2) : min([NbLT1 simLims(3)])
@@ -160,57 +155,52 @@ for ii = max([1 simLims(1)]) : simLims(2) : min([NbLT1 simLims(3)])
                      epochs, nbofBodies, ...
                      TimeList1, NbLE1, TimeListE1, dist1,coord1,vel1);
 
-    % Extraction of the day in MJD (integer):
+  % Extraction of the day in MJD (integer):
 	day=fix(TimeList1(ii)-MJD_0);
 	
 	% Extraction of the seconds
 	sec=mod(TimeList1(ii)-MJD_0,1)*SEC_0;
 	
-	% Extraction of the transversal difference between the reference and the actual trajectories
-    %% ------- ne PAS utiliser ii avec coord0 ! -----
-%     X0(1)   = interp1(TimeList0, coord0(:,1), epochs(1), 'linear');
-%     X0(2)   = interp1(TimeList0, coord0(:,2), epochs(1), 'linear');
-%     X0(3)   = interp1(TimeList0, coord0(:,3), epochs(1), 'linear');
+  % Transversal and Longitudinal shift in the trajectories as computed and as expected
+  % as expected
   unitvvector = unit_speed_vector(ii,vel1);
 	trans_traj=norm(cross(Xexp(1:3), unitvvector));
-	% Extraction of the longitunal difference between the reference and the actual trajectories
 	long_traj=dot(Xexp(1:3), unitvvector);
-	% Extraction of transversal error of OD wrt actual trajectory :
+	% as computed
 	trans_err=norm(cross(X(1:3), unitvvector));
-	% Extraction of longitudinal error of OD wrt actual trajectory :
 	long_err=dot(X(1:3), unitvvector);
 
-	% Extraction of the latitude and the longitude differences of seeing Jupiter from the reference and actual trajectories
-    l0   = interp1(TimeListE0(1,:), lat0(1,:),  epochs(1), 'linear');
-    L0   = interp1(TimeListE0(1,:), long0(1,:), epochs(1), 'linear');
+	% Latitude and Longitude differences of seeing the 1st foreground bodies
+  % ... to be adapted in the use of several foreground bodies
+  l0   = interp1(TimeListE0(1,:), lat0(1,:),  epochs(1), 'linear');
+  L0   = interp1(TimeListE0(1,:), long0(1,:), epochs(1), 'linear');
 	lat_angle=3600.*(lat1(ii)-l0);
 	long_angle=3600.*(long1(ii)-L0);
 
-	% Extraction of colinearity of the speed during OD
-    vIni(1)   = interp1(TimeList0, vel0(:,1), epochs(1), 'linear');
-    vIni(2)   = interp1(TimeList0, vel0(:,2), epochs(1), 'linear');
-    vIni(3)   = interp1(TimeList0, vel0(:,3), epochs(1), 'linear');
-    vFinal(1) = interp1(TimeList0, vel0(:,1), epochs(Nobs), 'linear');
-    vFinal(2) = interp1(TimeList0, vel0(:,2), epochs(Nobs), 'linear');
-    vFinal(3) = interp1(TimeList0, vel0(:,3), epochs(Nobs), 'linear');
-    %speed_angle=atan2(norm(cross(velocity1(ii,:), velocity1(ii+timeStep(1)+timeStep(2)+timeStep(3),:))), dot(velocity1(ii,:), velocity1(ii+timeStep(1)+timeStep(2)+timeStep(3),:)))*180/pi;
-    %% ------- ne PAS utiliser ii avec coord0 ! -----
-    speed_angle = (180.*3600./pi)*acos( dot(vIni, vFinal) / (norm(vIni)*norm(vFinal)) );
-	% Extraction of uniformity of the speed during OD (in mm/s from m/s=> factor 1000.)
+	% Colinearity and Intensity of the velocity during OD
+  vIni(1)   = interp1(TimeList0, vel0(:,1), epochs(1), 'linear');
+  vIni(2)   = interp1(TimeList0, vel0(:,2), epochs(1), 'linear');
+  vIni(3)   = interp1(TimeList0, vel0(:,3), epochs(1), 'linear');
+  vFinal(1) = interp1(TimeList0, vel0(:,1), epochs(Nobs), 'linear');
+  vFinal(2) = interp1(TimeList0, vel0(:,2), epochs(Nobs), 'linear');
+  vFinal(3) = interp1(TimeList0, vel0(:,3), epochs(Nobs), 'linear');
+  speed_angle = (180.*3600./pi)*acos( dot(vIni, vFinal) / (norm(vIni)*norm(vFinal)) );
 	norme=1000.*(norm(vFinal)-norm(vIni)); % m/s
 	
-	% Extraction of the rank of the A matrix
+	% Rank of the A matrix
 	A_rank=rank(A);
 	
-	% Extraction of the 3 next dates of the pictures
-	%nxdates=[TimeList1(ii+timeStep(1))-MJD_0,TimeList1(ii+timeStep(1)+timeStep(2))-MJD_0,TimeList1(ii+timeStep(1)+timeStep(2)+timeStep(3))-MJD_0];
+	% 3 next dates that were considered with the current epoch furing th OD
 	nxdates=epochs(2:4)-MJD_0;
 	
-	% Extraction of the CPU time
+	% CPU time
 	CPU=elapsed_time;
   
-  %data=vertcat(data, [day,sec,trans_traj,long_traj,lat_angle,long_angle,trans_err,long_err,speed_angle,norme,A_rank,nxdates,CPU,X']); %we create the matrix using concatenation
-  data=[day,sec,trans_traj,long_traj,lat_angle,long_angle,trans_err,long_err,speed_angle,norme,A_rank,nxdates,CPU,X',Xexp']; %we create the matrix using concatenation
+  % concatenation
+  data = [day, sec, trans_traj, long_traj, lat_angle, long_angle, trans_err, long_err, speed_angle, norme, ...
+          A_rank, nxdates, CPU, ...
+          X', ...
+          Xexp'];
   %--------- output writing ----------------
   dataExtraction=fopen(outputs,'a');
   fprintf(dataExtraction, ['%0.3d %12.4f %11.3f %11.3f %11.3f %11.3f %11.3f %11.3f %6.1f %9.2f' ...
