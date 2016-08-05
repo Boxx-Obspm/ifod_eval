@@ -163,7 +163,7 @@ for ii = max([1 simLims(1)]) : simLims(2) : min([NbLT1 simLims(3)])
   % -long1/-long0 avec les donnees reelles (bug!)
   observd = extractObs(epochs, nbofBodies, NbLE1, TimeListE1, lat1, -long1);
   predict = prepareObs(epochs, nbofBodies, NbLE0, TimeListE0, lat0, -long0, dist0);
-  % +long1/+long0 avec les donnees modèles (bug!)
+  % +long1/+long0 avec les donnees modï¿½les (bug!)
 %   observd = extractObs(epochs, nbofBodies, NbLE1, TimeListE1, lat1, long1);
 %   predict = prepareObs(epochs, nbofBodies, NbLE0, TimeListE0, lat0, long0, dist0);
   Xexp = expectedOD (TimeList0, NbLE0, TimeListE0, dist0, coord0, vel0, ...
@@ -177,12 +177,13 @@ for ii = max([1 simLims(1)]) : simLims(2) : min([NbLT1 simLims(3)])
 
   post_sigma  = 0.1;
   delta_sigma = 1.;
-  nbTries=1; nbCycle=1000;
+  nbTries=1; nbCycle=500;
   metaX = double(zeros(1,19));
   cumul_CPU = 0.;
   %notStabilized = true;
   notStabilized = false;
-  while or(delta_sigma/post_sigma > 0.03, notStabilized)
+  %while or(delta_sigma/post_sigma > 0.03, notStabilized)
+  while or(delta_sigma/post_sigma > 0.10, notStabilized)
     % the Monte-Carlo analysis is run until sigma has been stabilized at 1% accuracy
     %notStabilized = (delta_sigma/post_sigma > 0.01); % previous value
     err_obs = normrnd(0., sigma_obs/3600., [nbCycle 2*Nobs]);
