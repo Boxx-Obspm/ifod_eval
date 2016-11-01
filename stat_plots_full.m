@@ -1,10 +1,11 @@
 %%----------------HEADER---------------------------%%
 %Author:           Boris Segret
-%Version & Date:   V3.1 07-05-2016 (dd/mm/yyyy)
-%                  (forked from data_plots_full.m, v2.1)
+%Version & Date:   V3.2 16-08-2016 (dd/mm/yyyy)
+%                  - adaptations to N=5 measurements
 %                  REMAINING ISSUE: some figures are not compatible with multiple foreground objects
-%CL=2
+%CL=0
 %Version & Date:
+%                  V3.1 07-05-2016
 %                  V3.0 27-04-2016
 %                  (forked from data_plots_full.m, v2.1)
 %                  V2.1 11-04-2016 Boris Segret
@@ -22,6 +23,9 @@
 %
 
 fname = outputs;
+ix0=16; % rank before the first X data
+lx=26;  % length of the X-vector
+exx=ix0+3*lx; % length of data
 
 pf=fopen(fname,'rt');
 while not(feof(pf))
@@ -29,7 +33,7 @@ while not(feof(pf))
   if not(isempty(l))
     if not(isempty(strfind(l,'META_STOP')))
       l=fgetl(pf);
-      data = sscanf(l, '%f', [1 72]);
+      data = sscanf(l, '%f', [1 exx]);
       break;
     end;
     if strfind(l,'SCENARIO')>0
@@ -41,13 +45,10 @@ end;
 while not(feof(pf));
   l=fgetl(pf);
   if not(isempty(l))
-    data = [data; sscanf(l, '%f', [1 72])];
+    data = [data; sscanf(l, '%f', [1 exx])];
   end;
 end;
 
-% % data=fscanf(pf, '%g', [53 inf]); data=data';
-% data=fscanf(pf, '%g', [72 inf]); data=data';
-% fclose(pf);
 tt = -data(1,1)+data(:,1)+data(:,2)/86400.;
 mm = median(abs(data));
 
@@ -96,60 +97,78 @@ text(0,0,ttl,'FontWeight','bold', 'horizontalalignment','center'); set(gca, 'Vis
 %
 subplot(7,2,[ 3  5]); hold on;
 %plot(tt, data(:,16), 'ob', tt, data(:,35), 'xk');
-plot(tt, data(:,35), '-k');
-errorbar(tt, data(:,16), data(:,54), 'ob');
-idy=find(abs(data(:,16))<=2*mm(16)); mn1=mean(data(idy,16)); sg1 = max([1 std(data(idy,16))]); % ylim([mn1-3*sg1 mn1+3*sg1]);
+plot(tt, data(:,ix0+lx+1), '-k');
+errorbar(tt, data(:,ix0+1), data(:,ix0+2*lx+1), 'ob');
+idy=find(abs(data(:,ix0+1))<=2*mm(ix0+1));
+mn1=mean(data(idy,ix0+1));
+sg1 = max([1 std(data(idy,ix0+1))]);
+% ylim([mn1-3*sg1 mn1+3*sg1]);
 %xlabel('time (days)');
 ylabel('dX (km)');  %  legend('reconstructed', 'expected');
 set(gca, 'XColor', 'm'); set(gca, 'YColor', 'm');
 %
 subplot(7,2,[ 7  9]); hold on;
 %plot(tt, data(:,17), 'ob', tt, data(:,36), 'xk');
-plot(tt, data(:,36), '-k');
-errorbar(tt, data(:,17), data(:,55), 'ob');
-idy=find(abs(data(:,17))<=2*mm(17)); mn1=mean(data(idy,17)); sg1 = max([1 std(data(idy,17))]); % ylim([mn1-3*sg1 mn1+3*sg1]);
+plot(tt, data(:,ix0+lx+2), '-k');
+errorbar(tt, data(:,ix0+2), data(:,ix0+2*lx+2), 'ob');
+idy=find(abs(data(:,ix0+2))<=2*mm(ix0+2));
+mn1=mean(data(idy,ix0+2));
+sg1 = max([1 std(data(idy,ix0+2))]);
+% ylim([mn1-3*sg1 mn1+3*sg1]);
 %xlabel('time (days)');
 ylabel('dY (km)');  %  legend('reconstructed', 'expected');
 set(gca, 'XColor', 'm'); set(gca, 'YColor', 'm');
 %
 subplot(7,2,[11 13]); hold on;
 % plot(tt, data(:,18), 'ob', tt, data(:,37), 'xk');
-plot(tt, data(:,37), '-k');
-errorbar(tt, data(:,18), data(:,56), 'ob');
-idy=find(abs(data(:,18))<=2*mm(18)); mn1=mean(data(idy,18)); sg1 = max([1 std(data(idy,18))]); % ylim([mn1-3*sg1 mn1+3*sg1]);
+plot(tt, data(:,ix0+lx+3), '-k');
+errorbar(tt, data(:,ix0+3), data(:,ix0+2*lx+3), 'ob');
+idy=find(abs(data(:,ix0+3))<=2*mm(ix0+3));
+mn1=mean(data(idy,ix0+3));
+sg1 = max([1 std(data(idy,ix0+3))]); % ylim([mn1-3*sg1 mn1+3*sg1]);
 xlabel('time (days)'); ylabel('dZ (km)');  % legend('reconstructed', 'expected');
 set(gca, 'XColor', 'm'); set(gca, 'YColor', 'm');
 %
 subplot(7,2,[ 4  6]); hold on; 
 % plot(tt, data(:,32), 'ob', tt, data(:,51), 'xk');
-plot(tt, data(:,51), '-k');
-errorbar(tt, data(:,32), data(:,70), 'ob');
-idy=find(abs(data(:,32))<=2*mm(32)); mn1=mean(data(idy,32)); sg1 = max([.0001 std(data(idy,32))]); % ylim([mn1-3*sg1 mn1+3*sg1]);
+plot(tt, data(:,ix0+2*lx-5), '-k');
+errorbar(tt, data(:,ix0+lx-5), data(:,ix0+3*lx-5), 'ob');
+idy=find(abs(data(:,ix0+lx-5))<=2*mm(ix0+lx-5));
+mn1=mean(data(idy,ix0+lx-5));
+sg1 = max([.0001 std(data(idy,ix0+lx-5))]);
+% ylim([mn1-3*sg1 mn1+3*sg1]);
 %xlabel('time (days)');
 ylabel('dVx (km/s)'); %legend('reconstructed', 'expected');
 set(gca, 'XColor', 'm'); set(gca, 'YColor', 'm');
 %
 subplot(7,2,[ 8 10]); hold on;
 % plot(tt, data(:,33), 'ob', tt, data(:,52), 'xk');
-plot(tt, data(:,52), '-k');
-errorbar(tt, data(:,33), data(:,71), 'ob');
-idy=find(abs(data(:,33))<=2*mm(33)); mn1=mean(data(idy,33)); sg1 = max([.0001 std(data(idy,33))]); % ylim([mn1-3*sg1 mn1+3*sg1]);
+plot(tt, data(:,ix0+2*lx-4), '-k');
+errorbar(tt, data(:,ix0+lx-4), data(:,ix0+3*lx-4), 'ob');
+idy=find(abs(data(:,ix0+lx-4))<=2*mm(ix0+lx-4));
+mn1=mean(data(idy,ix0+lx-4));
+sg1 = max([.0001 std(data(idy,ix0+lx-4))]); % ylim([mn1-3*sg1 mn1+3*sg1]);
 %xlabel('time (days)');
 ylabel('dVy (km/s)'); % legend('reconstructed', 'expected');
 set(gca, 'XColor', 'm'); set(gca, 'YColor', 'm');
 %
 subplot(7,2,[12 14]); hold on;
 % plot(tt, data(:,34), 'ob', tt, data(:,53), 'xk');
-plot(tt, data(:,53), '-k');
-errorbar(tt, data(:,34), data(:,72), 'ob');
-idy=find(abs(data(:,34))<=2*mm(34)); mn1=mean(data(idy,34)); sg1 = max([.0001 std(data(idy,34))]); % ylim([mn1-3*sg1 mn1+3*sg1]);
+plot(tt, data(:,ix0+2*lx-3), '-k');
+errorbar(tt, data(:,ix0+lx-3), data(:,ix0+3*lx-3), 'ob');
+idy=find(abs(data(:,ix0+lx-3))<=2*mm(34));
+mn1=mean(data(idy,ix0+lx-3));
+sg1 = max([.0001 std(data(idy,ix0+lx-3))]); % ylim([mn1-3*sg1 mn1+3*sg1]);
 xlabel('time (days)'); ylabel('dVz (km/s)'); % legend('reconstructed', 'expected');
 set(gca, 'XColor', 'm'); set(gca, 'YColor', 'm');
 
 figure(3); clf; % (dr), shift of distance to the foreground object
 %-----------------------------------------------------------------
-hold on; plot(tt, data(:,28), '-b', tt, data(:,47), '-k');
-idy=find(abs(data(:,28))<=2*mm(28)); mn1=mean(data(idy,28)); sg1 = max([1 std(data(idy,28))]); ylim([mn1-3*sg1 mn1+3*sg1]);
+hold on; plot(tt, data(:,ix0+16), '-b', tt, data(:,ix0+lx+16), '-k');
+idy=find(abs(data(:,ix0+16))<=2*mm(ix0+16)); 
+mn1=mean(data(idy,ix0+16));
+sg1 = max([1 std(data(idy,ix0+16))]);
+ylim([mn1-3*sg1 mn1+3*sg1]);
 xlabel('time (days)'); ylabel('dr (km)');    legend('reconstructed', 'expected');
 title([scn ' - Distance shift to foreground body'], 'FontWeight','bold');
 set(gca, 'XColor', 'm'); set(gca, 'YColor', 'm');
