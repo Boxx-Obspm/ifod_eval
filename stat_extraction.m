@@ -1,7 +1,9 @@
 %%----------------HEADER---------------------------%%
 %Author:           Boris Segret
-version = '3.2';
+version = '3.3.x';
 % Version & Date:
+%                  V3.3 03-11-2016 (dd-mm-yyyy)
+%                  - Rebuilt according to ../ifod/oneOD to introduce a Kalman Filter
 %                  V3.2 26-08-2016 (dd-mm-yyyy)
 %                  - Output formats are changed to focus on M3 (M1..M5)
 %                  V3.1 06-08-2016
@@ -25,7 +27,7 @@ version = '3.2';
 %                  - minor adapations
 %                  - works with a call from "ifod_tests"
 %                  until V1   11-09-2015, Tristan Mallet
-% CL=1
+% CL=2 (v3.2)
 %
 %
 % This produces a comparison *with* error bars at every time step between the
@@ -102,8 +104,15 @@ end
 
 ii_MAX=length(TimeList1);
 
-fprintf('WARNING: file %s is not read\n', sampling);
-fprintf('Time-sampling is forced constant for the full scenario: %i hours\n', dtConst);
+% (prepare for STEP 2)
+% alternative:
+% (dtConst in hours)
+dtKF = 86400.*1/24; % in seconds (measurement of all planets once an hour, with 5 planets)
+dtConst = (nKF)*dtKF/3600.;
+fprintf('WARNING: dynamic time step (not used: %s)\n', sampling);
+fprintf('Time-sampling is nKF*dtKF = %i hours\n', dtConst);
+% fprintf('WARNING: file %s is not read\n', sampling);
+% fprintf('Time-sampling is forced constant for the full scenario: %i hours\n', dtConst);
 % timeStep=fopen(sampling, 'r'); %we open the file timeStep-i
 % 	l=' ';
 % 	while 1
@@ -120,10 +129,6 @@ fprintf('Time-sampling is forced constant for the full scenario: %i hours\n', dt
 % % Not tolerant to empty lines !!!
 % fclose(timeStep);
 
-% in the approach below we must keep T and dt with the same number of lines
-% (due to slctEpochs)
-T=[floor(TimeList1(1)-2400000.5), 0; floor(TimeList1(ii_MAX)-2400000.5)+1, 0];
-dt=dtConst.*[ones(1,Nobs-1); zeros(1,Nobs-1)];
 outputs = [outputs pfix];
 
 %--------- output preparations -----------
@@ -137,10 +142,6 @@ for ii=1:nbofBodies
   fprintf(dataExtraction,'%2i, ref. : %s\n', ii, refEphemerid(1+refEphNameLength(ii):refEphNameLength(ii+1)));
   fprintf(dataExtraction,'    actual %s\n', actEphemerid(1+actEphNameLength(ii):actEphNameLength(ii+1)));
 end
-%fprintf(dataExtraction,'Sampling of observations are changed at the following dates :\n');
-%fprintf(dataExtraction,'%15d%15f\n',T');
-%fprintf(dataExtraction,'\nSamplings (hours after previous obs) :\n');
-%fprintf(dataExtraction,'%15d%15d%15d\n',dt');
 fprintf(dataExtraction,'\nMETA_START');
 fprintf(dataExtraction,'\n\nCOLUMN #01 : Day of the date (in MJD)\n');
 fprintf(dataExtraction,'COLUMN #02 : Seconds in the day (in seconds)\n');
@@ -165,59 +166,102 @@ fprintf(dataExtraction, '   1            2           3           4           5  
 fprintf(dataExtraction,'META_STOP\n');
 fclose(dataExtraction);
 %-----------------------------------------
+% construction of the observations and predicted observations
 
+t = TimeList1(simLims(1));
+t_fin = TimeList1(min([NbLT1 simLims(3)]));
+% simLims(2) not used anymore
+obstime = [];
+for ii = simLims(1):simLims(2):min([NbLT1 simLims(3)])
+  obstime = [obstime (TimeList1(simLims(1)+(ii-1))+(0:nKF-1)*dtKF/86400.)];
+end
+% for ii=1:nKF:length(obstime) fprintf('%12.5f ',obstime(ii:ii+nKF-1)); fprintf('\n'); end
+obsbody = 1+mod([0:nKF-1], nbofBodies); % obsbody = [nbofBody] between 1 and nbofBodies
+observd = double(zeros(nKF,2)); % observd = [out_lat1 out_long1];
+predict = double(zeros(nKF,3)); % predict = [out_lat0 out_long0 out_distance0]
 
-observd = double(zeros(Nobs,2)); % observd = [out_lat1 out_long1];
-predict = double(zeros(Nobs,3)); % predict = [out_lat0 out_long0 out_distance0]
-for ii = max([1 simLims(1)]) : simLims(2) : min([NbLT1 simLims(3)])
-  epochs  = slctEpochs(Nobs, TimeList1(ii), T, dt);
-  % -long1/-long0 avec les donnees reelles (bug!)
-  % observd = extractObs(epochs, nbofBodies, NbLE1, TimeListE1, lat1, -long1);
-  % predict = prepareObs(epochs, nbofBodies, NbLE0, TimeListE0, lat0, -long0, dist0);
-  % +long1/+long0 avec les donnees simulees (bug!)
-  observd = extractObs(epochs, nbofBodies, NbLE1, TimeListE1, lat1, long1);
-  predict = prepareObs(epochs, nbofBodies, NbLE0, TimeListE0, lat0, long0, dist0);
-  Xexp = expectedOD (TimeList0, NbLE0, TimeListE0, dist0, coord0, vel0, ...
-                     epochs, nbofBodies, ...
-                     TimeList1, NbLE1, TimeListE1, dist1,coord1,vel1);
-                 
+%-----------------------------------------
+% feeding the KFd-OD (Kalman Filtered Orbit Determination)
+
+ik=0;
+iDebug=10; debug;
+for ii = simLims(1):simLims(2):min([NbLT1 simLims(3)])
   post_sigma  = 0.1;
   delta_sigma = 1.;
-  nbTries=1; nbCycle=500;
+  nbTries=0;
   metaX = double(zeros(1,4*Nobs+6));
   cumul_CPU = 0.;
   %notStabilized = true;
   notStabilized = false;
-  while or(delta_sigma/post_sigma > 0.01, notStabilized)
-%   while or(delta_sigma/post_sigma > 0.10, notStabilized)
-    % the Monte-Carlo analysis is run until sigma has been stabilized at 3% accuracy
-    %notStabilized = (delta_sigma/post_sigma > 0.01); % previous value
-    err_obs = normrnd(0., sigma_obs/3600., [nbCycle 2*Nobs]);
-    err_obs = [err_obs(:,1) err_obs(:, 2)./cosd(observd(1,1)) ...
-               err_obs(:,3) err_obs(:, 4)./cosd(observd(2,1)) ...
-               err_obs(:,5) err_obs(:, 6)./cosd(observd(3,1)) ...
-               err_obs(:,7) err_obs(:, 8)./cosd(observd(4,1)) ...
-               err_obs(:,9) err_obs(:,10)./cosd(observd(5,1)) ];
-    for nm=1:nbCycle
-        nbTries = nbTries +1;
-        measured = observd + [err_obs(nm,1:2); err_obs(nm,3:4); ...
-            err_obs(nm,5:6); err_obs(nm,7:8); err_obs(nm,9:10)];
-        [X,A,B,elapsed_time] = computeSolution(epochs, measured, predict, algo);
-        if (nbTries==1)
-            metaX = X';
-        else
-            metaX = [metaX; X'];
-        end
-        cumul_CPU = cumul_CPU + elapsed_time;
+  % ----- pas de convergence d'erreur pour le moment
+% while or(delta_sigma/post_sigma > 0.01, notStabilized)
+% while or(delta_sigma/post_sigma > 0.10, notStabilized)
+% the Monte-Carlo analysis is run until sigma has been stabilized at 3% accuracy
+% notStabilized = (delta_sigma/post_sigma > 0.01); % previous value
+  %
+  % ----- HERE IS A STILL UNEXEPLAINED BUG! -----
+  if (scnRealistic)
+      % -long1/-long0 avec les donnees realistes (bug!)
+      observd = extractObs(obstime(ik+1:ik+nKF), obsbody, NbLE1, TimeListE1, lat1, -long1);
+      predict = prepareObs(obstime(ik+1:ik+nKF), obsbody, NbLE0, TimeListE0, lat0, -long0, dist0);
+  else
+      % +long1/+long0 avec les donnees simulees (bug!)
+      observd = extractObs(obstime(ik+1:ik+nKF), obsbody, NbLE1, TimeListE1, lat1, long1);
+      predict = prepareObs(obstime(ik+1:ik+nKF), obsbody, NbLE0, TimeListE0, lat0, long0, dist0);
+  end
+  % -----------------------------------------------
+  
+  err_obs = normrnd(0., sigma_obs/3600., [nbCycles nKF 2]);
+  err_obs(:,:,2) = err_obs(:,:,2)./repmat(cosd(observd(:,1)'), nbCycles,1);
+
+  epochs(1:Nobs-1) = obstime(ik+1:ik+Nobs-1);
+  refState = [ interp1(TimeList0, coord0(:,1), obstime(ik+3), 'linear'); ...
+       interp1(TimeList0, coord0(:,2), obstime(ik+3), 'linear'); ...
+       interp1(TimeList0, coord0(:,3), obstime(ik+3), 'linear'); ...
+       interp1(TimeList0, vel0(:,1),   obstime(ik+3), 'linear'); ...
+       interp1(TimeList0, vel0(:,2),   obstime(ik+3), 'linear'); ...
+       interp1(TimeList0, vel0(:,3),   obstime(ik+3), 'linear') ];
+  iDebug=11; debug;
+  for nm=1:nbCycles
+    nbTries = nbTries +1;
+    measurd = observd + [err_obs(nm,:,1)' err_obs(nm,:,2)'];
+    refLoc = [0;0;0];
+    iDebug=1; debug;
+    %------------------
+    % KALMAN FILTER, steps Nobs to nKF
+%     for ij = Nobs:nKF
+%       epochs(1:Nobs)   = obstime(ik+ij-Nobs+1:ik+ij);
+%       measur(1:Nobs,:) = measurd(ij-Nobs+1:ij,:);
+%       predic(1:Nobs,:) = predict(ij-Nobs+1:ij,:);
+%       bodies(1:Nobs)   = obsbody(ij-Nobs+1:ij);
+      oneOD;
+%     end
+    % last X vector provides the best determination
+    %------------------
+    iDebug=4; debug;
+    if (nbTries==1)
+      metaX = X';
+    else
+      metaX = [metaX; X'];
     end
+    cumul_CPU = cumul_CPU + elapsed_time;
     pre_sigma   = post_sigma;
     post_sigma  = sum(std(metaX(:,7:9)));
     delta_sigma = abs(post_sigma - pre_sigma);
   end
-  X = mean(metaX);
-  stdX = std(metaX);
+  ik=ik+nKF;
+
+% % % % %         %**********
+% % % %           % needed in oneOD at the moment for delta-acceleration estimate
+% % % % %           Xexp = expectedOD (TimeList0, NbLE0, TimeListE0, dist0, coord0, vel0, ...
+% % % % %                      epochs, nbofBodies, ...
+% % % % %                      TimeList1, NbLE1, TimeListE1, dist1,coord1,vel1);
+% % % % %         %**********
+  X = mean(metaX,1);
+  stdX = std(metaX,0,1);
   elapsed_time = cumul_CPU./nbTries;
-  
+  % --- expected solution:
+                 
   % Extraction of the date in MJD (integer) and seconds:
   day=fix(TimeList1(ii)-MJD_0);
   sec=mod(TimeList1(ii)-MJD_0,1)*SEC_0;
@@ -229,17 +273,16 @@ for ii = max([1 simLims(1)]) : simLims(2) : min([NbLT1 simLims(3)])
   unitvvector(3) = interp1(TimeList1, vel0(:,3), epochs(3), 'linear');
   unitvvector = unitvvector./norm(unitvvector);
   %==> as expected:
-  trans_traj = norm(cross(Xexp(7:9), unitvvector));
+  trans_traj = norm(cross(Xexp(7:9)', unitvvector));
   longi_traj = dot(Xexp(7:9), unitvvector);
   %==> as computed:
   transmeta = cross(metaX(:,7:9), repmat(unitvvector, [size(metaX,1) 1]));
   trans_std = std(sqrt(transmeta(:,1).^2+transmeta(:,2).^2+transmeta(:,3).^2));
   longimeta = dot(metaX(:,7:9)', repmat(unitvvector, [size(metaX,1) 1])');
   longi_std = std(longimeta);
-  trans_err = norm(cross(X(7:9)', unitvvector));
+  trans_err = norm(cross(X(7:9), unitvvector));
   longi_err = dot(X(7:9)', unitvvector);
   
-
   % Colinearity and Intensity of the velocity during OD
   % with Nobs=5 the criterion to be watched for is "dacc"
   vIni(1)   = interp1(TimeList0, vel0(:,1), epochs(1), 'linear');
@@ -263,6 +306,7 @@ for ii = max([1 simLims(1)]) : simLims(2) : min([NbLT1 simLims(3)])
           X, ...
           Xexp', ...
           stdX];
+  iDebug=12; debug;
   %--------- output writing ----------------
   dataExtraction=fopen(outputs,'a');
   fprintf(dataExtraction, ['%0.3d %12.4f %11.3f %11.3f %11.3f %11.3f %11.3f %11.3f' ...
@@ -275,5 +319,5 @@ for ii = max([1 simLims(1)]) : simLims(2) : min([NbLT1 simLims(3)])
                         ' %11.3f %11.3f %11.3f %11.3f %11.3f %11.6f %11.6f %11.6f %11.8f %11.8f %11.8f\n'], data');
   fclose(dataExtraction);
   %-----------------------------------------
-  fprintf('%d => %d tries\n', ii, nbTries);
+%   fprintf(' : %d => %d tries\n', ii, nbTries);
 end

@@ -23,7 +23,7 @@
 %     X26: 26-vector of the expected result for the vector of unknowns (km and km/s)
 
 function X26 = expectedOD(TimeList0, NbLE0, TimeListE0, dist0, coord0, vel0, ...
-                     epochs, nbofBodies, ...
+                     epochs, bodies, ...
                      TimeList1, NbLE1, TimeListE1, dist1, coord1, vel1)
 % Interpolation for the reference trajectory
 out_coordinates0(:,1) = interp1(TimeList0, coord0(:,1), epochs, 'linear');
@@ -48,7 +48,7 @@ acc1(1:Nobs-1,1:3)=(out_velocity1(2:Nobs,1:3)-out_velocity1(1:Nobs-1,1:3))./...
 dacc(1:3) = mean(acc1-acc0,1);
 
 for ii=1:length(epochs)
-  i=1+mod(ii-1,nbofBodies);
+    i=bodies(ii);
     out_distance0(ii) = interp1(TimeListE0(i,1:NbLE0(i)), dist0(i,1:NbLE0(i)), epochs(ii), 'linear');
     out_distance1(ii) = interp1(TimeListE1(i,1:NbLE1(i)), dist1(i,1:NbLE1(i)), epochs(ii), 'linear');
 end
