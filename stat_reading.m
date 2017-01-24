@@ -1,4 +1,6 @@
-% outputs_o  = '..\ifod\inputs\Y+Y_out_E-1asec,MC0-6';
+% outputs_o  = '../cas_EME/outs/E2M-58122Y_E-1,050h,a-h';
+% outputs_o  = '../cas_Y/outs/Y+Y_E-1,100h,a-g';
+outputs_o  = '../ifod_tests/outs/test_E-1,4x50h,tests_bin';
 graphs = true;
 graphs = false;
 

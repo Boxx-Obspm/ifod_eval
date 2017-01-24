@@ -1,8 +1,9 @@
 clear;
-outputs_bin = '../cas_EME/outs/EtoM-58122+Y_E-1asec,MC0-7';
+% outputs_bin = '../cas_EME/outs/E2M-58122Y_E-1,050h,a-h';
 % outputs_bin = '../cas_Y/outs/Y+Y_out_E-1asec,MC0-8';
+outputs_bin = '../ifod_tests/outs/test_E-1,300x50h,tests_bin';
 graphs = true;
-graphs = false;
+% graphs = false;
 
 T0N=datenum([2000 1 1 0 0 0]);
 T0JD=2451544.5;
@@ -104,7 +105,7 @@ for nC=1:nbCycles
     plot(rrme(:,2), 'gx:');
     plot(rrme(:,3), 'bx:');
 %     ylim([min(min(rrme)) max(max(rrme))]);
-   ylim([-5*mmkf(nbPts*3/4) 5*mmkf(nbPts*3/4)]);
+   ylim([-5*mmkf(floor(nbPts*3/4)) 5*mmkf(floor(nbPts*3/4))]);
     title(['Residuals dX, dY, dZ (km) ' sdt ', ' stf]);
     legend('dX (-KF, ..3D-OD)', 'dY (-KF, ..3D-OD)', ...
         'dZ (-KF, ..3D-OD)', 'Location', 'SouthWest');
@@ -113,14 +114,14 @@ for nC=1:nbCycles
     plot(dtrk, 'r-'); hold on;
     plot(dtrm, 'gx:');
 %     ylim([-2*std(dtrm) 2*std(dtrm)]);
-    ylim([-5*mmtk(nbPts*3/4) 5*mmtk(nbPts*3/4)]);
+    ylim([-5*mmtk(floor(nbPts*3/4)) 5*mmtk(floor(nbPts*3/4))]);
     plot(mmtk, 'r:'); plot(-mmtk, 'r:');
     title(['Residual in transversal shift (km) ' sdt ', ' stf]);
     subplot(4,3, [7 9]);
     plot(dlgk, 'r-'); hold on;
     plot(dlgm, 'gx:');
 %     ylim([-2*std(dlgm) 2*std(dlgm)]);
-    ylim([-5*mmlk(nbPts*3/4) 5*mmlk(nbPts*3/4)]);
+    ylim([-5*mmlk(floor(nbPts*3/4)) 5*mmlk(floor(nbPts*3/4))]);
     plot(mmlk, 'r:'); plot(-mmlk, 'r:');
     title(['Residual in longitudinal shift (km) ' sdt ', ' stf]);
 

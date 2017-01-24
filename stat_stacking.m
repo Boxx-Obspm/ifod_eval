@@ -1,16 +1,18 @@
 % outputs_bin = ''; % filename must be provided
-outputs_i1 = '../cas_Y/outs/Y+Y_out_E-1,100h,MCa-c';
-outputs_i2 = '../cas_Y/outs/Y+Y_out_E-1,100h,YYd_bin';
+outputs_i1 = '../cas_EME/outs/E2M-58122Y_E-1,200h,a-g';
+outputs_i2 = '../cas_EME/outs/E2M-58122Y_E-1,200h,h_bin';
 
-outputs_o  = '../cas_Y/outs/Y+Y_out_E-1,100h,MCa-d'; % (+3 pending)
-% outputs_o  = '../cas_Y/outs/Y+Y_1as,100h,MC0-5'; % (+1 pending) Sigma's accuracy within tolerances
-% outputs_o  = '../cas_Y/outs/Y+Y_E-1,050h,MC0-7'; % within tolerances (~1 or 2 mean values above)
-% outputs_o  = '..\ifod\cas_EME\EtoM-58122+Y_E-1asec,MC0-7'; % within tolerances if nix=15
-% outputs_o  = '..\ifod\cas_EME\EtoM-58122+Y_E-1asec,MC0-6'; % ~2 mean values above tolerance
-% outputs_o  = '..\ifod\cas_EME\EtoM-58122+Y_E-1asec,MC0-4'; % sigma's acc better than 10%
-% outputs_o  = '..\ifod\inputs\Y+Y_out_E-1asec,MC0-8'; % means & sigma within tolerances
-% outputs_o  = '..\ifod\inputs\Y+Y_out_E-1asec,MC0-7'; % ~3 mean values above tolerance
-% outputs_o  = '..\ifod\inputs\Y+Y_out_E-1asec,MC0-4'; % All sigma's acc better than 10%
+% outputs_o  = '../cas_EME/outs/E2M-58122Y_E-1,200h,a-h'; % sigmas ok (a-d); mean (a-h +1 pending!!)
+% outputs_o  = '../cas_EME/outs/E2M-58122Y_E-1,150h,a-h'; % sigma within tolerances
+% outputs_o  = '../cas_EME/outs/E2M-58122Y_E-1,100h,0-7'; % sigma within tolerances
+% outputs_o  = '../cas_EME/outs/E2M-58122Y_E-1,050h,a-h'; % sigma within tolerances
+% outputs_o  = '../cas_EME/outs/E2M-58122Y_1as,100h,a-h'; % sigma within tolerances
+% outputs_o  = '../cas_Y/outs/Y+Y_E-1,200h,1-8'; % means & sigma within tolerances
+% outputs_o  = '../cas_Y/outs/Y+Y_E-1,150h,0-7'; % means & sigma within tolerances
+% outputs_o  = '../cas_Y/outs/Y+Y_1as,100h,0-6'; % means & sigma within tolerances
+% outputs_o  = '../cas_Y/outs/Y+Y_E-1,100h,a-g'; % means & sigma within tolerances
+% outputs_o  = '../cas_Y/outs/Y+Y_E-1,050h,0-7'; % within tolerances (~1 or 2 mean values above)
+% outputs_o  = '../cas_Y/outs/Y+Y_E-1asec,100h,270t,0-8'; % means & sigma within tolerances
 graphs = true;
 % graphs = false;
 
