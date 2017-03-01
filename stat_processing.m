@@ -1,9 +1,9 @@
 clear;
-% outputs_bin = '../cas_EME/outs/E2M-58122Y_E-1,050h,a-h';
-% outputs_bin = '../cas_Y/outs/Y+Y_out_E-1asec,MC0-8';
-outputs_bin = '../ifod_tests/outs/test_E-1,300x50h,tests_bin';
+% outputs_bin = '../cas_EME/outs/E2M-58122Y_1as,400x200h,1345202_bin';
+outputs_bin = '../cas_Y/outs/Y+Y_E-1,400x200h,P41324_fixed_bin';
+% outputs_bin = '../ifod_tests/outs/test_E-1,4x50h,tests_bin';
 graphs = true;
-% graphs = false;
+graphs = false;
 
 T0N=datenum([2000 1 1 0 0 0]);
 T0JD=2451544.5;
@@ -27,15 +27,19 @@ if (ntStep==0)
   t0=t2;
   nstats=1; % nb of values in the statistical post-processing
   nvKF=19;  % nb of stored values per KF-step
+  ep = double(zeros(100,1));
   moyKF=double(zeros(100,nvKF));
   stdKF=double(zeros(100,nvKF));
-  moyMd=double(zeros(100,2));
-  stdMd=double(zeros(100,2));
+  moyMd=double(zeros(100,5));
+  stdMd=double(zeros(100,5));
   stats=double(zeros(100,nstats));
   ntStep=1;
 else
   if (mod(ntStep,100)==0)
       % memory re-allocation every 100 steps
+      Y=ep;
+      ep=double(zeros(ntStep+100, 1));
+      ep(1:ntStep)=Y; clear Y;
       Y=moyKF;
       moyKF=double(zeros(ntStep+100, nvKF));
       moyKF(1:ntStep, 1:nvKF)=Y; clear Y;
@@ -44,17 +48,17 @@ else
       stdKF(1:ntStep, 1:nvKF)=Y; clear Y;
       Y=moyMd;
       moyMd=double(zeros(ntStep+100, 2));
-      moyMd(1:ntStep, 1:2)=Y; clear Y;
+      moyMd(1:ntStep, 1:5)=Y; clear Y;
       Y=stdMd;
       stdMd=double(zeros(ntStep+100, 2));
-      stdMd(1:ntStep, 1:2)=Y; clear Y;
+      stdMd(1:ntStep, 1:5)=Y; clear Y;
       Y=stats;
       stats=double(zeros(ntStep+100, nstats));
       stats(1:ntStep, 1:nstats)=Y; clear Y;
   end
   ntStep = ntStep+1;
 end
-
+ep(ntStep)=t2-t0;
 stf=datestr(t2,'yyyy-mm-dd HH:MM:SS');
 dtKF=24*(t2-t1)/2;
 sdt=['~' num2str(dtKF,'%4.1f') 'h/step'];
@@ -70,7 +74,7 @@ nbCycles=Z(3);
 lastData = (Z(4)==1);
 
 solKF = double(zeros(nbCycles, nvKF));
-dtlKF = double(zeros(nbCycles*nbPts, 2));
+solMd = double(zeros(nbCycles*nbPts, 5));
 
 for nC=1:nbCycles
   % il faudrait cycler
@@ -171,34 +175,40 @@ for nC=1:nbCycles
     legend('Velocity (km/s)');
   end
   nbCol=1;
-  solKF(nC, nbCol:nbCol+2) = rex(nbPts+1,1:3);  nbCol=nbCol+3; %1-3
-  solKF(nC, nbCol:nbCol+2) = rrme(nbPts+1,1:3); nbCol=nbCol+3; %4-6
-  solKF(nC, nbCol:nbCol+2) = rrkf(nbPts+1,1:3); nbCol=nbCol+3; %7-9
+  solKF(nC, nbCol:nbCol+2) = rex(nbPts+1,1:3);  nbCol=nbCol+3; %1-3 EXPECTED
+  solKF(nC, nbCol:nbCol+2) = rrme(nbPts+1,1:3); nbCol=nbCol+3; %4-6: ça n'a pas de sens!
+  solKF(nC, nbCol:nbCol+2) = rrkf(nbPts+1,1:3); nbCol=nbCol+3; %7-9 KF solution
   solKF(nC, nbCol) = lKg(nbPts+1); nbCol=nbCol+1; %10
   solKF(nC, nbCol) = ldP(nbPts+1); nbCol=nbCol+1; %11
   solKF(nC, nbCol) = vkf(nbPts+1);  nbCol=nbCol+1; %12
-  solKF(nC, nbCol) = dtrm(nbPts+1); nbCol=nbCol+1; %13
-  solKF(nC, nbCol) = dlgm(nbPts+1); nbCol=nbCol+1; %14
+  solKF(nC, nbCol) = dtrm(nbPts+1); nbCol=nbCol+1; %13: ça n'a pas de sens!
+  solKF(nC, nbCol) = dlgm(nbPts+1); nbCol=nbCol+1; %14: ça n'a pas de sens!
   solKF(nC, nbCol) = dtrk(nbPts+1); nbCol=nbCol+1; %15
   solKF(nC, nbCol) = dlgk(nbPts+1); nbCol=nbCol+1; %16
   solKF(nC, nbCol) = mmkf(nbPts+1); nbCol=nbCol+1; %17
   solKF(nC, nbCol) = mmtk(nbPts+1); nbCol=nbCol+1; %18
   solKF(nC, nbCol) = mmlk(nbPts+1); nbCol=nbCol+1; %19
-  dtlKF(1+(nC-1)*nbPts:nC*nbPts, 1) = dtrm(1:nbPts);
-  dtlKF(1+(nC-1)*nbPts:nC*nbPts, 2) = dlgm(1:nbPts);
+  solMd(1+(nC-1)*nbPts:nC*nbPts, 1) = rrme(1:nbPts,1);
+  solMd(1+(nC-1)*nbPts:nC*nbPts, 2) = rrme(1:nbPts,2);
+  solMd(1+(nC-1)*nbPts:nC*nbPts, 3) = rrme(1:nbPts,3);
+  solMd(1+(nC-1)*nbPts:nC*nbPts, 4) = dtrm(1:nbPts);
+  solMd(1+(nC-1)*nbPts:nC*nbPts, 5) = dlgm(1:nbPts);
 end
 
 % statistics for ntStep:
 moyKF(ntStep,:) = mean(solKF);
 stdKF(ntStep,:) =  std(solKF);
-moyMd(ntStep,:) = mean(dtlKF);
-stdMd(ntStep,:) =  std(dtlKF);
+moyMd(ntStep,:) = mean(solMd);
+stdMd(ntStep,:) =  std(solMd);
 
 figure(101);
 %
 subplot(2,1,1); hold on;
 % plot(t2-t0, moyKF(ntStep,15), 'or');
-errorbar(t2-t0, moyMd(ntStep,1), stdMd(ntStep,1), 'r');
+% =======> transv et longi contiennent un bug. Pour Y+Y on utilise en attendant...
+% moyMd(ntStep,4) transversal ===> moyMd(ntStep,2) le long de Y
+% moyMd(ntStep,5) longitudinl ===> moyMd(ntStep,1) le long de X
+errorbar(t2-t0, moyMd(ntStep,2), stdMd(ntStep,2), 'r');
 errorbar(t2-t0, moyKF(ntStep,15), stdKF(ntStep,15), 'k');
 xlabel('time (days)'); ylabel('Shift error (km)'); 
 title(['Transversal errors, ' datestr(t0,'yyyy-mm-dd') '..' datestr(t2,'yyyy-mm-dd')]);
@@ -206,12 +216,31 @@ set(gca, 'XColor', 'm'); set(gca, 'YColor', 'm');
 %
 subplot(2,1,2); hold on;
 % plot(t2-t0, moyKF(ntStep,16), 'or');
-errorbar(t2-t0, moyMd(ntStep,2), stdMd(ntStep,2), 'r');
+% =======> transv et longi contiennent un bug. Pour Y+Y on utilise en attendant...
+% moyMd(ntStep,4) transversal ===> moyMd(ntStep,2) le long de Y
+% moyMd(ntStep,5) longitudinl ===> moyMd(ntStep,1) le long de X
+errorbar(t2-t0, moyMd(ntStep,1), stdMd(ntStep,1), 'r');
 errorbar(t2-t0, moyKF(ntStep,16), stdKF(ntStep,16), 'k');
 xlabel('time (days)'); ylabel('Shift error (km)');
 title(['Longitudinal errors, ' datestr(t0,'yyyy-mm-dd') '..' datestr(t2,'yyyy-mm-dd')]);
 set(gca, 'XColor', 'm'); set(gca, 'YColor', 'm');
 end
-subplot(2,1,1); xlim([0 t2-t0]);
-subplot(2,1,2); xlim([0 t2-t0]);
 fclose(fw);
+
+subplot(2,1,1);
+xlim([0 t2-t0]);
+% =======> transv et longi contiennent un bug. Pour Y+Y on utilise en attendant...
+% moyMd(ntStep,4) transversal ===> moyMd(ntStep,2) le long de Y
+% moyMd(ntStep,5) longitudinl ===> moyMd(ntStep,1) le long de X
+plot(ep(1:ntStep), moyMd(1:ntStep,2), '-r');
+plot(ep(1:ntStep), moyKF(1:ntStep,15), '-k');
+
+subplot(2,1,2);
+xlim([0 t2-t0]);
+% =======> transv et longi contiennent un bug. Pour Y+Y on utilise en attendant...
+% moyMd(ntStep,4) transversal ===> moyMd(ntStep,2) le long de Y
+% moyMd(ntStep,5) longitudinl ===> moyMd(ntStep,1) le long de X
+plot(ep(1:ntStep), moyMd(1:ntStep,1), '-r');
+plot(ep(1:ntStep), moyKF(1:ntStep,16), '-k');
+
+

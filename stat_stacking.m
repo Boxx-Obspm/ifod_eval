@@ -84,6 +84,6 @@ fclose(fi1);
 fclose(fi2);
 
 fprintf('Stacked:\n - %s\n - %s\n=> %s\n', outputs_i1, outputs_i2, outputs_o);
-fprintf('=> Nb.of time-steps: %i\n', ntStep);
-fprintf('=> Nb.of Cycles per time-step: %i\n', nbCycls1+nbCycls2);
+fprintf('=> Nb.of time-steps (unchanged): %i\n', ntStep);
+fprintf('=> Nb.of Cycles per time-step (1+2): %i\n', nbCycls1+nbCycls2);
 stat_reading;

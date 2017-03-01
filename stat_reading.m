@@ -1,6 +1,6 @@
-% outputs_o  = '../cas_EME/outs/E2M-58122Y_E-1,050h,a-h';
-% outputs_o  = '../cas_Y/outs/Y+Y_E-1,100h,a-g';
-outputs_o  = '../ifod_tests/outs/test_E-1,4x50h,tests_bin';
+% outputs_o  = '../cas_EME/outs/E2M-58122_E-1,400x200h(873+),1348446_bin';
+% outputs_o  = '../cas_Y/outs/Y+Y41324_E-1,400x200h,P41324(101+),1355334_bin';
+% outputs_o  = '../ifod_tests/outs/test_E-1,4x50h,tests_bin';
 graphs = true;
 graphs = false;
 
