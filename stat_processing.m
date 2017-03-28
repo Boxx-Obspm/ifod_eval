@@ -1,7 +1,8 @@
 clear;
-% outputs_bin = '../cas_EME/outs/E2M-58122Y_1as,400x200h,1345202_bin';
-outputs_bin = '../cas_Y/outs/Y+Y_E-1,400x200h,P41324_fixed_bin';
-% outputs_bin = '../ifod_tests/outs/test_E-1,4x50h,tests_bin';
+% outputs_bin = '../cas_EME/outs/E0_ECMJE_02as,450MCx192KF,1393473_bin';
+outputs_bin = '../cas_Y/outs/Y+X41324_01as,400MCx192KF,1393274_bin';
+% outputs_bin = '../cas_Y/outs/Y+Y_E-1,400x200h,P41324_fixed_bin';
+% outputs_bin = '../ifod_tests/outs/Ytest_01as,100MCx192KF,tests_bin'; % non-fonctionnel
 graphs = true;
 graphs = false;
 
@@ -9,8 +10,13 @@ T0N=datenum([2000 1 1 0 0 0]);
 T0JD=2451544.5;
 
 figure(101); clf;
-subplot(2,1,1); ylim([ -600  600]); hold on;
-subplot(2,1,2); ylim([-1000 1000]); hold on;
+subplot(2,1,1); ylim([ -600  600]); xlim([0  200]); hold on;
+% subplot(2,1,2); ylim([-2500 500]); xlim([ -1  200]); hold on;
+subplot(2,1,2); ylim([-600 600]); xlim([0  200]); hold on;
+figure(120); clf;
+subplot(3,1,1); ylim([ -300  300]); xlim([0  200]); hold on;
+subplot(3,1,2); ylim([ -300  300]); xlim([0  200]); hold on;
+subplot(3,1,3); ylim([ -300  300]); xlim([0  200]); hold on;
 
 % initizes the binary outputs with the number of written columns
 fw = fopen(outputs_bin,'r');
@@ -23,8 +29,21 @@ T = fread(fw, 2, 'double'); % will provide a 1x2 double array
 t1=T(1)-T0JD+T0N;
 t2=T(2)-T0JD+T0N;
 
+% fwrite(fw, [Nobs nKF nbCycles (ik+nKF==length(obstime))], 'uint32');
+Z = fread(fw, 4, 'uint32'); % will provide a 1x3 uint32 array
+% fwrite(fw, ...
+%     [rex rrme rrkf lKg ldP vkf dtrm' dlgm' dtrk' dlgk' mmkf' mmtk' mmlk'], ...
+%     'double');
+Nobs=Z(1);
+nKF=Z(2); dtKF=12./1440.; % dtKF, in decimal days, not stored!!!
+nbCycles=Z(3);
+% nbPts=Z(2)-Z(1)+1; % (nbPts=nKF-Nobs+1;)
+nbPts=nKF;
+lastData = (Z(4)==1);
+
 if (ntStep==0)
-  t0=t2;
+%   t0=t2;
+  t0=t2-nKF*Nobs*dtKF;
   nstats=1; % nb of values in the statistical post-processing
   nvKF=19;  % nb of stored values per KF-step
   ep = double(zeros(100,1));
@@ -58,20 +77,11 @@ else
   end
   ntStep = ntStep+1;
 end
+
 ep(ntStep)=t2-t0;
 stf=datestr(t2,'yyyy-mm-dd HH:MM:SS');
-dtKF=24*(t2-t1)/2;
+dtKF=24*Nobs*((t2-t1)/2);
 sdt=['~' num2str(dtKF,'%4.1f') 'h/step'];
-% fwrite(fw, [Nobs nKF nbCycles (ik+nKF==length(obstime))], 'uint32');
-Z = fread(fw, 4, 'uint32'); % will provide a 1x3 uint32 array
-% fwrite(fw, ...
-%     [rex rrme rrkf lKg ldP vkf dtrm' dlgm' dtrk' dlgk' mmkf' mmtk' mmlk'], ...
-%     'double');
-nbPts=Z(2)-Z(1)+1; % (nbPts=nKF-Nobs+1;)
-Nobs=Z(1);
-nKF=Z(2);
-nbCycles=Z(3);
-lastData = (Z(4)==1);
 
 solKF = double(zeros(nbCycles, nvKF));
 solMd = double(zeros(nbCycles*nbPts, 5));
@@ -204,43 +214,70 @@ stdMd(ntStep,:) =  std(solMd);
 figure(101);
 %
 subplot(2,1,1); hold on;
-% plot(t2-t0, moyKF(ntStep,15), 'or');
-% =======> transv et longi contiennent un bug. Pour Y+Y on utilise en attendant...
-% moyMd(ntStep,4) transversal ===> moyMd(ntStep,2) le long de Y
-% moyMd(ntStep,5) longitudinl ===> moyMd(ntStep,1) le long de X
-errorbar(t2-t0, moyMd(ntStep,2), stdMd(ntStep,2), 'r');
+errorbar(t2-t0, moyMd(ntStep,4), stdMd(ntStep,4), 'r');
 errorbar(t2-t0, moyKF(ntStep,15), stdKF(ntStep,15), 'k');
 xlabel('time (days)'); ylabel('Shift error (km)'); 
 title(['Transversal errors, ' datestr(t0,'yyyy-mm-dd') '..' datestr(t2,'yyyy-mm-dd')]);
 set(gca, 'XColor', 'm'); set(gca, 'YColor', 'm');
 %
 subplot(2,1,2); hold on;
-% plot(t2-t0, moyKF(ntStep,16), 'or');
-% =======> transv et longi contiennent un bug. Pour Y+Y on utilise en attendant...
-% moyMd(ntStep,4) transversal ===> moyMd(ntStep,2) le long de Y
-% moyMd(ntStep,5) longitudinl ===> moyMd(ntStep,1) le long de X
-errorbar(t2-t0, moyMd(ntStep,1), stdMd(ntStep,1), 'r');
+errorbar(t2-t0, moyMd(ntStep,5), stdMd(ntStep,5), 'r');
 errorbar(t2-t0, moyKF(ntStep,16), stdKF(ntStep,16), 'k');
 xlabel('time (days)'); ylabel('Shift error (km)');
 title(['Longitudinal errors, ' datestr(t0,'yyyy-mm-dd') '..' datestr(t2,'yyyy-mm-dd')]);
 set(gca, 'XColor', 'm'); set(gca, 'YColor', 'm');
+
+figure(120);
+%
+subplot(3,1,1); hold on;
+errorbar(t2-t0, moyMd(ntStep,1), stdMd(ntStep,1), 'r');
+errorbar(t2-t0, moyKF(ntStep,7), stdKF(ntStep,7), 'k');
+xlabel('time (days)'); ylabel('X shift error (km)'); 
+set(gca, 'XColor', 'm'); set(gca, 'YColor', 'm');
+%
+subplot(3,1,2); hold on;
+errorbar(t2-t0, moyMd(ntStep,2), stdMd(ntStep,2), 'r');
+errorbar(t2-t0, moyKF(ntStep,8), stdKF(ntStep,8), 'k');
+xlabel('time (days)'); ylabel('Y shift error (km)'); 
+set(gca, 'XColor', 'm'); set(gca, 'YColor', 'm');
+%
+subplot(3,1,3); hold on;
+errorbar(t2-t0, moyMd(ntStep,3), stdMd(ntStep,3), 'r');
+errorbar(t2-t0, moyKF(ntStep,9), stdKF(ntStep,9), 'k');
+xlabel('time (days)'); ylabel('Z shift error (km)'); 
+set(gca, 'XColor', 'm'); set(gca, 'YColor', 'm');
+
 end
 fclose(fw);
 
+figure(101);
+
 subplot(2,1,1);
 xlim([0 t2-t0]);
-% =======> transv et longi contiennent un bug. Pour Y+Y on utilise en attendant...
-% moyMd(ntStep,4) transversal ===> moyMd(ntStep,2) le long de Y
-% moyMd(ntStep,5) longitudinl ===> moyMd(ntStep,1) le long de X
-plot(ep(1:ntStep), moyMd(1:ntStep,2), '-r');
+plot(ep(1:ntStep), moyMd(1:ntStep,4), '-r');
 plot(ep(1:ntStep), moyKF(1:ntStep,15), '-k');
 
 subplot(2,1,2);
 xlim([0 t2-t0]);
-% =======> transv et longi contiennent un bug. Pour Y+Y on utilise en attendant...
-% moyMd(ntStep,4) transversal ===> moyMd(ntStep,2) le long de Y
-% moyMd(ntStep,5) longitudinl ===> moyMd(ntStep,1) le long de X
-plot(ep(1:ntStep), moyMd(1:ntStep,1), '-r');
+plot(ep(1:ntStep), moyMd(1:ntStep,5), '-r');
 plot(ep(1:ntStep), moyKF(1:ntStep,16), '-k');
 
+figure(120);
+subplot(3,1,1);
+xlim([0 t2-t0]);
+plot(ep(1:ntStep), moyMd(1:ntStep,1), '-r');
+plot(ep(1:ntStep), moyKF(1:ntStep,7), '-k');
+subplot(3,1,2);
+xlim([0 t2-t0]);
+plot(ep(1:ntStep), moyMd(1:ntStep,2), '-r');
+plot(ep(1:ntStep), moyKF(1:ntStep,8), '-k');
+subplot(3,1,3);
+xlim([0 t2-t0]);
+plot(ep(1:ntStep), moyMd(1:ntStep,3), '-r');
+plot(ep(1:ntStep), moyKF(1:ntStep,9), '-k');
 
+figure(101); subplot(2,1,1); xlim([0  200]); ylim([ -10 550]); 
+figure(101); subplot(2,1,2); xlim([0  200]); ylim([ -500 500]); 
+figure(120); subplot(3,1,1); xlim([0  200]); ylim([ -500  500]);
+figure(120); subplot(3,1,2); xlim([0  200]); ylim([ -300  300]);
+figure(120); subplot(3,1,3); xlim([0  200]); ylim([ -300  300]);

@@ -1,4 +1,4 @@
-% outputs_o  = '../cas_EME/outs/E2M-58122_E-1,400x200h(873+),1348446_bin';
+outputs_o  = '../cas_EME/outs/E0_ECMJE_001as,450MCx192KF,1393475_bin';
 % outputs_o  = '../cas_Y/outs/Y+Y41324_E-1,400x200h,P41324(101+),1355334_bin';
 % outputs_o  = '../ifod_tests/outs/test_E-1,4x50h,tests_bin';
 graphs = true;
@@ -75,9 +75,9 @@ while not(lastData)
  
 % fwrite(fw, [Nobs nKF nbCycles (ik+nKF==length(obstime))], 'uint32');
 Z = fread(fo, 4, 'uint32'); % will provide a 1x3 uint32 array
-nbPts=Z(2)-Z(1)+1; % (nbPts=nKF-Nobs+1;)
 Nobs=Z(1);
 nKF=Z(2);
+nbPts=nKF;
 nbCycles=Z(3);
 lastData = (Z(4)==1);
 

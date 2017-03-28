@@ -1,7 +1,10 @@
 %%----------------HEADER---------------------------%%
 %Author:           Boris Segret
-version = '3.3.2';
+version = '3.3.4';
 % Version & Date:
+%                  V3.3.4, 23-03-2017
+%                  - all bugs fixed
+%                  - adaptation to 5 new observations for each KF step
 %                  V3.3 03-11-2016 (dd-mm-yyyy) V3.3.2 19-02-2017 (see CL below)
 %                  V3.3 03-11-2016 (dd-mm-yyyy) V3.3.1 27-01-2017
 %                  - Rebuilt according to ../ifod/oneOD to introduce a Kalman Filter
@@ -30,9 +33,8 @@ version = '3.3.2';
 %                  - minor adapations
 %                  - works with a call from "ifod_tests"
 %                  until V1   11-09-2015, Tristan Mallet
-% CL=1 (v3.3.1) : fixed the bug for Y scenario (not good for general case)
-% CL=0 (v3.3.1) : bug in the longitudinal & transversal shifts
-% CL=2 (v3.2)
+%
+% CL=2 (v3.3.4)
 %
 %
 % This produces a comparison *without* error bars at every time step between the
@@ -148,53 +150,66 @@ fclose(dataExtraction);
 t = TimeList1(simLims(1));
 t_fin = TimeList1(min([NbLT1 simLims(3)]));
 nbEpochs = 1+floor(double(min([NbLT1 simLims(3)]) - simLims(1))/double(simLims(2)));
-obstime = double(zeros(1,nbEpochs*nKF));
-ik=0;
-for ii = simLims(1):simLims(2):min([NbLT1 simLims(3)])
-  %   obstime = [obstime (TimeList1(ii)+(0:nKF-1)*dtKF/86400.)];
-  obstime(ik*nKF+1:(ik+1)*nKF) = (TimeList1(ii)+(0:nKF-1)*dtKF/86400.);
-  ik = ik+1;
-end
-% (debug) for ii=1:nKF:length(obstime) fprintf('%12.5f ',obstime(ii:ii+nKF-1)); fprintf('\n'); end
-obsbody = 1+mod([0:nKF-1], nbofBodies); % obsbody = [nbofBody] between 1 and nbofBodies
-observd = double(zeros(nKF,2)); % observd = [out_lat1 out_long1];
-predict = double(zeros(nKF,3)); % predict = [out_lat0 out_long0 out_distance0]
+% obstime = double(zeros(1,nbEpochs*nKF));
+obstime = double(zeros(1,Nobs*nKF));
+% ik=0;
+% for ii = simLims(1):simLims(2):min([NbLT1 simLims(3)])
+%   %   obstime = [obstime (TimeList1(ii)+(0:nKF-1)*dtKF/86400.)];
+%   obstime(ik*nKF+1:(ik+1)*nKF) = (TimeList1(ii)+(0:nKF-1)*dtKF/86400.);
+%   ik = ik+1;
+% end
+% % (debug) for ii=1:nKF:length(obstime) fprintf('%12.5f ',obstime(ii:ii+nKF-1)); fprintf('\n'); end
+% obsbody = 1+mod([0:nKF-1], nbofBodies); % obsbody = [nbofBody] between 1 and nbofBodies
+% observd = double(zeros(nKF,2)); % observd = [out_lat1 out_long1];
+% predict = double(zeros(nKF,3)); % predict = [out_lat0 out_long0 out_distance0]
+obsbody = 1+mod([0:Nobs*nKF-1], nbofBodies); % obsbody = [nbofBody] between 1 and nbofBodies
+observd = double(zeros(Nobs*nKF,2)); % observd = [out_lat1 out_long1];
+predict = double(zeros(Nobs*nKF,3)); % predict = [out_lat0 out_long0 out_distance0]
 
 %-----------------------------------------
 % feeding the IFOD-KF (Kalman Filtered Orbit Determination)
 
 ik=0;
 iDebug=10; debug;
+tic;
 for ii = simLims(1):simLims(2):min([NbLT1 simLims(3)])
-  nbTries=0;
-  metaX = double(zeros(1,4*Nobs+6));
-  cumul_CPU = 0.;
+  obstime = (TimeList1(ii)+(0:Nobs*nKF-1)*dtKF/86400.);
+%   nbTries=0;
   % ----- HERE IS A STILL UNEXEPLAINED BUG! -----
   if (scnRealistic)
       % -long1/-long0 avec les donnees realistes (bug!)
-      observd = extractObs(obstime(ik+1:ik+nKF), obsbody, NbLE1, TimeListE1, lat1, -long1);
-      predict = prepareObs(obstime(ik+1:ik+nKF), obsbody, NbLE0, TimeListE0, lat0, -long0, dist0);
+%       observd = extractObs(obstime(ik+1:ik+nKF), obsbody, NbLE1, TimeListE1, lat1, -long1);
+%       predict = prepareObs(obstime(ik+1:ik+nKF), obsbody, NbLE0, TimeListE0, lat0, -long0, dist0);
+      observd = extractObs(obstime, obsbody, NbLE1, TimeListE1, lat1, -long1);
+      predict = prepareObs(obstime, obsbody, NbLE0, TimeListE0, lat0, -long0, dist0);
   else
       % +long1/+long0 avec les donnees simulees (bug!)
-      observd = extractObs(obstime(ik+1:ik+nKF), obsbody, NbLE1, TimeListE1, lat1, long1);
-      predict = prepareObs(obstime(ik+1:ik+nKF), obsbody, NbLE0, TimeListE0, lat0, long0, dist0);
+%       observd = extractObs(obstime(ik+1:ik+nKF), obsbody, NbLE1, TimeListE1, lat1, long1);
+%       predict = prepareObs(obstime(ik+1:ik+nKF), obsbody, NbLE0, TimeListE0, lat0, long0, dist0);
+      observd = extractObs(obstime, obsbody, NbLE1, TimeListE1, lat1, long1);
+      predict = prepareObs(obstime, obsbody, NbLE0, TimeListE0, lat0, long0, dist0);
   end
   % -----------------------------------------------
   
-  err_obs = normrnd(0., sigma_obs/3600., [nbCycles nKF 2]);
+%   err_obs = normrnd(0., sigma_obs/3600., [nbCycles nKF 2]);
+%   err_obs(:,:,2) = err_obs(:,:,2)./repmat(cosd(observd(:,1)'), nbCycles,1);
+  err_obs = normrnd(0., sigma_obs/3600., [nbCycles Nobs*nKF 2]);
   err_obs(:,:,2) = err_obs(:,:,2)./repmat(cosd(observd(:,1)'), nbCycles,1);
 
-  epochs(1:Nobs-1) = obstime(ik+1:ik+Nobs-1);
-  refState = [ interp1(TimeList0, coord0(:,1), obstime(ik+3), 'linear'); ...
-       interp1(TimeList0, coord0(:,2), obstime(ik+3), 'linear'); ...
-       interp1(TimeList0, coord0(:,3), obstime(ik+3), 'linear'); ...
-       interp1(TimeList0, vel0(:,1),   obstime(ik+3), 'linear'); ...
-       interp1(TimeList0, vel0(:,2),   obstime(ik+3), 'linear'); ...
-       interp1(TimeList0, vel0(:,3),   obstime(ik+3), 'linear') ];
-  iDebug=11; debug;
+%   epochs(1:Nobs-1) = obstime(ik+1:ik+Nobs-1);
+%   epochs = double(zeros(1,Nobs)); epochs(1:Nobs-1) = obstime(1:Nobs-1);
+  refState = [ interp1(TimeList0, coord0(:,1), obstime(3), 'linear'); ...
+       interp1(TimeList0, coord0(:,2), obstime(3), 'linear'); ...
+       interp1(TimeList0, coord0(:,3), obstime(3), 'linear'); ...
+       interp1(TimeList0, vel0(:,1),   obstime(3), 'linear'); ...
+       interp1(TimeList0, vel0(:,2),   obstime(3), 'linear'); ...
+       interp1(TimeList0, vel0(:,3),   obstime(3), 'linear') ];
+  iDebug=11; debug; % initizes the monitoring file before each MC simu
   metaX = double(zeros(nbCycles, 3));
+  tci0=toc;
+  cumul_CPU = 0.;
   for nm=1:nbCycles
-    nbTries = nbTries +1;
+%     nbTries = nbTries +1;
     measurd = observd + [err_obs(nm,:,1)' err_obs(nm,:,2)'];
     refLoc = [0;0;0];
     iDebug=1; debug;
@@ -202,15 +217,17 @@ for ii = simLims(1):simLims(2):min([NbLT1 simLims(3)])
     % KALMAN FILTER, steps Nobs to nKF
     
       oneOD;
-      
+%       tcf0=toc; fprintf('Step %i, MC cycle #%i (ifod_kf): %5.2f ms\n', ii,nm,(tcf0-tci0)*1000.);
+%       tci0=toc;
+
     % returned X vector provides the last and best determination
     % returned Xexp is the associated X-expected (same epochs)
     %------------------
     iDebug=4; debug;
     metaX(nm,:) = X(3*Nobs-2:3*Nobs)';
-    cumul_CPU = cumul_CPU + elapsed_time; % only the last elapsed_time in the KF is considered => ok
   end
-  elapsed_time = cumul_CPU./nbTries; % then ok to divide by nbTries
+%   elapsed_time = cumul_CPU./nbTries; % then ok to divide by nbTries
+  elapsed_time = cumul_CPU./nbCycles;
   ik=ik+nKF;
 
   % --- Expected solution: at last epoch(5|4) in the KF (last update, i.e."a priori")
@@ -220,21 +237,24 @@ for ii = simLims(1):simLims(2):min([NbLT1 simLims(3)])
   sec=mod(epochs(Nobs)-MJD_0,1)*SEC_0;
 
   % Transversal and Longitudinal shifts in the trajectories as computed and as expected
-  % unitvvector = unit_speed_vector(ii,vel1);
-  unitvvector(1) = interp1(TimeList1, vel0(:,1), epochs(Nobs), 'linear'); % last epoch in KF!
-  unitvvector(2) = interp1(TimeList1, vel0(:,2), epochs(Nobs), 'linear'); % last epoch in KF!
-  unitvvector(3) = interp1(TimeList1, vel0(:,3), epochs(Nobs), 'linear'); % last epoch in KF!
+  % unitvvector was already computed in iDebug==3 
+  unitvvector(1) = interp1(TimeList0, vel0(:,1), epochs(Nobs), 'linear'); % last epoch in KF!
+  unitvvector(2) = interp1(TimeList0, vel0(:,2), epochs(Nobs), 'linear'); % last epoch in KF!
+  unitvvector(3) = interp1(TimeList0, vel0(:,3), epochs(Nobs), 'linear'); % last epoch in KF!
   unitvvector = unitvvector./norm(unitvvector);
   %==> as expected:
   trans_traj = norm(cross(Xexp(3*Nobs-2:3*Nobs)', unitvvector));
   longi_traj = dot(Xexp(3*Nobs-2:3*Nobs), unitvvector);
   %==> as computed:
-%   transmeta = cross(metaX(:,1:3), repmat(unitvvector, [nbCycles 1]));
-%   longimeta = dot(metaX(:,1:3)', repmat(unitvvector, [nbCycles 1])');
-  Xobs = mean(metaX,1);
-  trans_err = norm(cross(Xobs, unitvvector));
-  longi_err = dot(Xobs', unitvvector);
-  
+%   Xobs = mean(metaX,1);
+%   trans_err = norm(cross(Xobs, unitvvector));
+%   longi_err = dot(Xobs', unitvvector);
+%   trans_err = norm(cross(X(7:9)', unitvvector));
+%   longi_err = dot(X(7:9)', unitvvector);
+  trans_err = mean(sqrt(metaX(:,1).^2+metaX(:,2).^2+metaX(:,3).^2));
+  longimeta = dot(metaX(:,1:3)', repmat(unitvvector, [size(metaX,1) 1])');
+  longi_err = mean(longimeta);
+
   % Colinearity and Intensity of the velocity during OD
   vIni(1)   = interp1(TimeList0, vel0(:,1), epochs(1), 'linear');
   vIni(2)   = interp1(TimeList0, vel0(:,2), epochs(1), 'linear');
@@ -250,8 +270,8 @@ for ii = simLims(1):simLims(2):min([NbLT1 simLims(3)])
 
   % concatenation
   data = [day, sec, trans_err, trans_traj, longi_err, longi_traj, ...
-          speed_angle, norme, nbTries, CPU, ...
-          Xobs, ...
+          speed_angle, norme, nbCycles, CPU, ...
+          mean(metaX,1), ...
           Xexp(3*Nobs-2:3*Nobs)'];
   iDebug=12; debug;
   %--------- output writing ----------------

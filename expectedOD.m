@@ -1,6 +1,8 @@
 %%----------------HEADER---------------------------%%
 %Author:           Boris Segret
 %Version & Date:
+%                  V2.4 17-03-2017 (dd-mm-yyyy)
+%                  - minor - and dirty - adaptations to extract the acceleration
 %                  V2.3 08-08-2016 (dd-mm-yyyy)
 %                  - adaptations to N = 5 measurement (X19 to X26)
 %                  V2.2 31-03-2016 (dd-mm-yyyy)
@@ -10,7 +12,7 @@
 %                  - *no* call to reference_trajectory.m
 %                  - *no* changes of the inputs
 %                  until V2 11-09-2015 Oussema SLEIMI & Tristan Mallet
-% CL=0
+% CL=1
 %
 % Ideally the ifod should return X19 as given here from the knownledge of both
 % the ref. & the actual trajectories (for tests only) interpolated at the dates of observations
@@ -25,6 +27,7 @@
 function X26 = expectedOD(TimeList0, NbLE0, TimeListE0, dist0, coord0, vel0, ...
                      epochs, bodies, ...
                      TimeList1, NbLE1, TimeListE1, dist1, coord1, vel1)
+% tci=toc;
 % Interpolation for the reference trajectory
 out_coordinates0(:,1) = interp1(TimeList0, coord0(:,1), epochs, 'linear');
 out_coordinates0(:,2) = interp1(TimeList0, coord0(:,2), epochs, 'linear');
@@ -57,6 +60,7 @@ end
 Dxyz = out_coordinates1 - out_coordinates0; % km
 Dvelocity = (out_velocity1 - out_velocity0);  % km/s
 drho = out_distance1 - out_distance0;
+% tcf=toc; fprintf('expectedOD: %5.2f ms, ', (tcf-tci)*1000.);
 
 X26 =[...
    Dxyz(1,1); Dxyz(1,2); Dxyz(1,3);...

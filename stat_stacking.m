@@ -1,7 +1,9 @@
 % outputs_bin = ''; % filename must be provided
-outputs_i1 = '../cas_EME/outs/E2M-58122Y_E-1,200h,a-g';
-outputs_i2 = '../cas_EME/outs/E2M-58122Y_E-1,200h,h_bin';
+outputs_i1 = '../cas_EME/outs/Eb+YECMJE_01as,300MCx192KF';
+outputs_i2 = '../cas_EME/outs/Eb+YECMJE_01as,100MCx192KF,1391998_bin';
 
+outputs_o  = '../cas_EME/outs/Eb+YECMJE_01as,400MCx192KF'; % aller à 450/500 cycles...
+% outputs_o  = '../cas_Y/outs/Y+Y41324_01as,400MCx192KF'; % ok (300 aurait été juste suffisant)
 % outputs_o  = '../cas_EME/outs/E2M-58122Y_E-1,200h,a-h'; % sigmas ok (a-d); mean (a-h +1 pending!!)
 % outputs_o  = '../cas_EME/outs/E2M-58122Y_E-1,150h,a-h'; % sigma within tolerances
 % outputs_o  = '../cas_EME/outs/E2M-58122Y_E-1,100h,0-7'; % sigma within tolerances
@@ -51,9 +53,9 @@ if (Zi1(1:2)~=Zi2(1:2)) fprintf('Inconsistency in the Nb.of points!\n'); end
 ntStep = ntStep+1; fprintf('Stacking time-step #%i: %s\n', ntStep, stf);
 
 Z = Zi1;
-nbPts=Z(2)-Z(1)+1; % (nbPts=nKF-Nobs+1;)
 Nobs=Z(1);
 nKF=Z(2);
+nbPts=nKF;
 nbCycls1=Zi1(3);
 nbCycls2=Zi2(3);
 Z(3)=nbCycls1+nbCycls2;
