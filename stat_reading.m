@@ -1,5 +1,29 @@
-outputs_o  = '../cas_EME/outs/E0_ECMJE_001as,450MCx192KF,1393475_bin';
-% outputs_o  = '../cas_Y/outs/Y+Y41324_E-1,400x200h,P41324(101+),1355334_bin';
+%%----------------HEADER---------------------------%%
+%Author:           Boris Segret
+% Version & Date:
+%                  V1.1, 25-04-2017
+%                  - minor changes
+%                  until V1   23-03-2017
+%
+% CL=2 (v1.1)
+%
+%
+% This analyzes a binarly file of results to assess if there are statistically
+% sufficient data.
+% 
+% Option: additional plots
+%
+% I/
+%    <result_file>
+%    <option "graphs">
+% O/
+%    <stability of the mean and standard deviations, and extrema found>
+%    (with option "graphs") <?>
+
+
+% outputs_o = outputs_bin;
+outputs_o  = '../cas_EME/outs/Eb+YECMJE_01as,400MCx192KF';
+% outputs_o  = '../cas_Y/outs/Y0_41324_001as,400MCx192KF,1393478_bin';
 % outputs_o  = '../ifod_tests/outs/test_E-1,4x50h,tests_bin';
 graphs = true;
 graphs = false;

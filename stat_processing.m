@@ -1,6 +1,30 @@
+%%----------------HEADER---------------------------%%
+%Author:           Boris Segret
+% Version & Date:
+%                  V1.1, 25-04-2017
+%                  - additional plots
+%                  until V1   23-03-2017
+%
+% CL=2 (v1.1)
+%
+%
+% This produces basic graphs of the reconstructed OD with error bars,
+% as stored in the binary file of results of a given scenario.
+% 
+% Option: it can also plot the bahavior of each Kalman filter step
+%
+% I/
+%    <result_file>
+%    <option "graphs">
+% O/
+%    <shift errors with error bars in transverse and longitudinal directions>
+%    <shift errors with error bars in X, Y, Z, axis>
+%    (with option "graphs") <shifts over the Kalman filter>
+
+
 clear;
-% outputs_bin = '../cas_EME/outs/E0_ECMJE_02as,450MCx192KF,1393473_bin';
-outputs_bin = '../cas_Y/outs/Y+X41324_01as,400MCx192KF,1393274_bin';
+% outputs_bin = '../cas_EME/outs/E0_ECMJE_01as,450MCx192KF,1393471_bin';
+outputs_bin = '../cas_Y/outs/Y0_41324_01as,400MCx192KF,1393470_bin';
 % outputs_bin = '../cas_Y/outs/Y+Y_E-1,400x200h,P41324_fixed_bin';
 % outputs_bin = '../ifod_tests/outs/Ytest_01as,100MCx192KF,tests_bin'; % non-fonctionnel
 graphs = true;
@@ -9,10 +33,12 @@ graphs = false;
 T0N=datenum([2000 1 1 0 0 0]);
 T0JD=2451544.5;
 
+figure(200); clf; xlim([0  200]); hold on;
 figure(101); clf;
-subplot(2,1,1); ylim([ -600  600]); xlim([0  200]); hold on;
-% subplot(2,1,2); ylim([-2500 500]); xlim([ -1  200]); hold on;
-subplot(2,1,2); ylim([-600 600]); xlim([0  200]); hold on;
+subplot(1,2,1);
+ylim([ -600  600]); xlim([0  200]); hold on;
+% subplot(1,2,2); ylim([-2500 500]); xlim([ -1  200]); hold on;
+subplot(1,2,2); ylim([-600 600]); xlim([0  200]); hold on;
 figure(120); clf;
 subplot(3,1,1); ylim([ -300  300]); xlim([0  200]); hold on;
 subplot(3,1,2); ylim([ -300  300]); xlim([0  200]); hold on;
@@ -211,16 +237,25 @@ stdKF(ntStep,:) =  std(solKF);
 moyMd(ntStep,:) = mean(solMd);
 stdMd(ntStep,:) =  std(solMd);
 
-figure(101);
+if (mod(ntStep,2)==0)
+    figure(200);
 %
-subplot(2,1,1); hold on;
 errorbar(t2-t0, moyMd(ntStep,4), stdMd(ntStep,4), 'r');
 errorbar(t2-t0, moyKF(ntStep,15), stdKF(ntStep,15), 'k');
 xlabel('time (days)'); ylabel('Shift error (km)'); 
 title(['Transversal errors, ' datestr(t0,'yyyy-mm-dd') '..' datestr(t2,'yyyy-mm-dd')]);
 set(gca, 'XColor', 'm'); set(gca, 'YColor', 'm');
+end 
+figure(101);
 %
-subplot(2,1,2); hold on;
+subplot(1,2,1); hold on;
+errorbar(t2-t0, moyMd(ntStep,4), stdMd(ntStep,4), 'r');
+errorbar(t2-t0, moyKF(ntStep,15), stdKF(ntStep,15), 'k');
+xlabel('time (days)'); ylabel('Shift error (km)'); 
+title(['Transversal errors, ' datestr(t0,'yyyy-mm-dd') '..' datestr(t2,'yyyy-mm-dd')]);
+set(gca, 'XColor', 'm'); set(gca, 'YColor', 'm');
+
+subplot(1,2,2); hold on;
 errorbar(t2-t0, moyMd(ntStep,5), stdMd(ntStep,5), 'r');
 errorbar(t2-t0, moyKF(ntStep,16), stdKF(ntStep,16), 'k');
 xlabel('time (days)'); ylabel('Shift error (km)');
@@ -252,12 +287,12 @@ fclose(fw);
 
 figure(101);
 
-subplot(2,1,1);
+subplot(1,2,1);
 xlim([0 t2-t0]);
 plot(ep(1:ntStep), moyMd(1:ntStep,4), '-r');
 plot(ep(1:ntStep), moyKF(1:ntStep,15), '-k');
 
-subplot(2,1,2);
+subplot(1,2,2);
 xlim([0 t2-t0]);
 plot(ep(1:ntStep), moyMd(1:ntStep,5), '-r');
 plot(ep(1:ntStep), moyKF(1:ntStep,16), '-k');
@@ -276,8 +311,8 @@ xlim([0 t2-t0]);
 plot(ep(1:ntStep), moyMd(1:ntStep,3), '-r');
 plot(ep(1:ntStep), moyKF(1:ntStep,9), '-k');
 
-figure(101); subplot(2,1,1); xlim([0  200]); ylim([ -10 550]); 
-figure(101); subplot(2,1,2); xlim([0  200]); ylim([ -500 500]); 
-figure(120); subplot(3,1,1); xlim([0  200]); ylim([ -500  500]);
-figure(120); subplot(3,1,2); xlim([0  200]); ylim([ -300  300]);
-figure(120); subplot(3,1,3); xlim([0  200]); ylim([ -300  300]);
+figure(101); subplot(1,2,1); xlim([0  200]); ylim([ -150 150]); 
+figure(101); subplot(1,2,2); xlim([0  200]); ylim([ -300 300]); 
+figure(120); subplot(3,1,1); xlim([0  200]); ylim([ -300 300]);
+figure(120); subplot(3,1,2); xlim([0  200]); ylim([ -200 200]);
+figure(120); subplot(3,1,3); xlim([0  200]); ylim([ -150 150]);
