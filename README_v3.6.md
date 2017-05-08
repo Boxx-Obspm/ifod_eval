@@ -7,7 +7,7 @@
 # Content:
 # (*: file modified in the last delivery)
 
-# *- README_v3.5.md
+============> # - README_v3.6.md <================ 3.6 = NEXT DELIVERY (May 2017)
 # - stat_extraction.m, v3.3.4
 # - expectedOD.m, v2.4
 

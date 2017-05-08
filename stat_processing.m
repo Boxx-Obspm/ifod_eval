@@ -24,9 +24,9 @@
 
 clear;
 % outputs_bin = '../cas_EME/outs/E0_ECMJE_01as,450MCx192KF,1393471_bin';
-outputs_bin = '../cas_Y/outs/Y0_41324_01as,400MCx192KF,1393470_bin';
+% outputs_bin = '../cas_Y/outs/Y0_41324_01as,400MCx192KF,1393470_bin';
 % outputs_bin = '../cas_Y/outs/Y+Y_E-1,400x200h,P41324_fixed_bin';
-% outputs_bin = '../ifod_tests/outs/Ytest_01as,100MCx192KF,tests_bin'; % non-fonctionnel
+outputs_bin = '../ifod_tests/outs/Y0_41324v4_01as,400MCx192KF,t_bin'; % non-fonctionnel
 graphs = true;
 graphs = false;
 
