@@ -1,3 +1,4 @@
+% Version 1.0, Author B.Segret
 % multi-purpose IFOD files troubleshooting
 bin1 = '../cas_Y/outs/Y+Y41324_E-1,400x200h,P41324,1355332_bin'; % filename must be provided
 bin2 = '../cas_Y/outs/Y+Y41324_E-1,400x200h,P41324(101+),1355334_bin'; % filename must be provided

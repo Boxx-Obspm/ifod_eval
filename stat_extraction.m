@@ -1,7 +1,9 @@
 %%----------------HEADER---------------------------%%
 %Author:           Boris Segret
-version = '4.0';
+version = '4.';
 % Version & Date:
+%                  v4.0.1, 27-06-2017
+%                  - added comments in the code
 %                  V4.0, 24-04-2017
 %                  - Trajectories are provided in new .xva format, with gravity data
 %                  - Ephemerides are provided in rectangular absolute coordinates,
@@ -43,9 +45,10 @@ version = '4.0';
 %                  until V1   11-09-2015, Tristan Mallet
 %
 %
-% This produces a comparison *without* error bars at every time step between the
-% computed and the expected results. It also produces a fully detailed RAW data file
-% for further statistical survey at each KF step or cycle step.
+% This produces a comparison between the computed IFOD and the expected results at every time step.
+% It includes Monte Carlo simulations, produces a RAW data file relative to every solutions obtained
+% from the 3rd foreground body (Nobs=5) over the KF, writes an ascii file with the average of the
+% final KF prediction from the 3rd foreground body.
 %
 % The assumption is to input a reference trajectory, ephemerides of a number
 % of foreground objects, and a slightly shifted trajectory wrt the reference.
@@ -53,12 +56,15 @@ version = '4.0';
 % Various files drive the computation, they are loaded by runifod main.
 %
 % I/
-%    <runifod_scenario>
-%    <runifod_MCdrivers>
+%    <runifod_scenario>:
+%    	- reference and simulated actual trajectories,
+%       - ephemerides of foregound bodies in rectangular coordinates
+%       - time-sampling of the simulation
+%    <runifod_MCdrivers>: drivers for the Monte-Carlo simulations and naming rules for output files
 %               see User Manual
 % O/
-%    <simplified results> IFOD-computed vs. expected results at successive time steps
-%    <raw data> detailed IFOD-results at each Kalman filter loops and cylce loops
+%    <simplified results> mean(IFOD-predicted solution) vs. expected solution at successive time steps
+%    <raw data> detailed IFOD-estimates and -predictions at each Kalman filter loops and cycle loops
 
 
 addpath('../ifod');

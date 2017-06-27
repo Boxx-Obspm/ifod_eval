@@ -1,3 +1,4 @@
+% Version v1.0, author B.Segret
 % outputs_bin = ''; % filename must be provided
 outputs_i1 = '../cas_EME/outs/Eb+YECMJE_01as,300MCx192KF';
 outputs_i2 = '../cas_EME/outs/Eb+YECMJE_01as,100MCx192KF,1391998_bin';
