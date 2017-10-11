@@ -24,8 +24,8 @@
 
 clear;
 % outputs_bin = '../cas_DAV/DAV_01as,50MCx8KF,t_bin';
-outputs_bin = '../cas_EME/outs/Eb+YECMJE_01as,400MCx192KF';
-% outputs_bin = '../cas_Y/outs/Y0_41324_01as,400MCx192KF,1393470_bin';
+% outputs_bin = '../cas_EME/outs/Eb+YECMJE_01as,400MCx192KF';
+outputs_bin = '../cas_EOs/EOs_GTO_01as,50MCx120KF,t2_bin';
 % outputs_bin = '../cas_Y/outs/YYv4_01as,400MCx192KF,1420098_bin';
 % outputs_bin = '../ifod_tests/outs/Y0_41324v4_01as,400MCx192KF,t_bin'; % non-fonctionnel
 graphs = true;
@@ -34,18 +34,22 @@ graphs = false;
 T0N=datenum([2000 1 1 0 0 0]);
 T0JD=2451544.5;
 
-figure(200); clf; ylim([ -300 300]); xlim([0 200]); hold on; set(gca, 'LooseInset', [0 0 0 0]);
-figure(100); clf; ylim([ -300 300]); xlim([0 200]); hold on; set(gca, 'LooseInset', [0 0 0 0]);
-figure(201); clf; ylim([ -300 300]); xlim([0 200]); hold on; set(gca, 'LooseInset', [0 0 0 0]);
-figure(101); clf; ylim([ -300 300]); xlim([0 200]); hold on; set(gca, 'LooseInset', [0 0 0 0]);
+% figure(200); clf; ylim([ -300 300]); xlim([0   4]); hold on; set(gca, 'LooseInset', [0 0 0 0]);
+% figure(100); clf; ylim([ -300 300]); xlim([0   4]); hold on; set(gca, 'LooseInset', [0 0 0 0]);
+% figure(201); clf; ylim([ -300 300]); xlim([0   4]); hold on; set(gca, 'LooseInset', [0 0 0 0]);
+% figure(101); clf; ylim([ -300 300]); xlim([0   4]); hold on; set(gca, 'LooseInset', [0 0 0 0]);
+figure(200); clf; xlim([0   4]); hold on; set(gca, 'LooseInset', [0 0 0 0]);
+figure(100); clf; xlim([0   4]); hold on; set(gca, 'LooseInset', [0 0 0 0]);
+figure(201); clf; xlim([0   4]); hold on; set(gca, 'LooseInset', [0 0 0 0]);
+figure(101); clf; xlim([0   4]); hold on; set(gca, 'LooseInset', [0 0 0 0]);
 
 figure(120); clf;
-subplot(3,1,1); ylim([ -300  300]); xlim([0  200]); hold on;
-subplot(3,1,2); ylim([ -300  300]); xlim([0  200]); hold on;
-subplot(3,1,3); ylim([ -300  300]); xlim([0  200]); hold on;
-% subplot(3,1,1); ylim([ -1  1]); xlim([0  10]); hold on;
-% subplot(3,1,2); ylim([ -1  1]); xlim([0  10]); hold on;
-% subplot(3,1,3); ylim([ -1  1]); xlim([0  10]); hold on;
+% subplot(3,1,1); ylim([ -300  300]); xlim([0    4]); hold on;
+% subplot(3,1,2); ylim([ -300  300]); xlim([0    4]); hold on;
+% subplot(3,1,3); ylim([ -300  300]); xlim([0    4]); hold on;
+subplot(3,1,1); xlim([0    4]); hold on;
+subplot(3,1,2); xlim([0    4]); hold on;
+subplot(3,1,3); xlim([0    4]); hold on;
 
 % initizes the binary outputs with the number of written columns
 fw = fopen(outputs_bin,'r');
@@ -270,7 +274,7 @@ stdjKF(ntStep,:) =  std(soljKF);
 moyMd(ntStep,:) = mean(solMd);
 stdMd(ntStep,:) =  std(solMd);
 
-if (mod(ntStep,2)==0)
+% if (mod(ntStep,2)==0)
     figure(100);
     errorbar(t2-t0, moyMd(ntStep,5), stdMd(ntStep,5), 'r');
     errorbar(t2-t0, moyKF(ntStep,8), stdKF(ntStep,8), 'k');
@@ -291,7 +295,7 @@ if (mod(ntStep,2)==0)
     errorbar(t2-t0, moyjKF(ntStep,7), stdjKF(ntStep,7), 'b');
     errorbar(t2-t0, moyKF(ntStep,7), stdKF(ntStep,7), 'k');
     
-end 
+% end 
 figure(120);
 %
 subplot(3,1,1);

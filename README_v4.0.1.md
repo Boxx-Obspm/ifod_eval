@@ -1,7 +1,8 @@
 # ifod_eval
 # Programs and Tools to evaluate IFOD v1.9
-# Version & Date:   v4.0, 27-Jun-2017, Boris Segret
+# Version & Date:   v4.1, 11-Oct-2017, Boris Segret
 #                   Use of MC simulations & KF to compute and output standard deviations
+#                   Fit with IFOD v1.9.1 (final release of IFOD with KF before WLS)
 # CL=2
 
 # Content:

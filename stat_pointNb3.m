@@ -23,16 +23,20 @@
 
 
 clear;
-% actual_traj = '../cas_EME/Y/58122+SOI_v6.4_jdv010_312_vts.xyzv';
+graphs = true;
+graphs = false;
+
+% actual_traj = '../cas_EOs/GTO_actl_EME2000_mini.xva';
+% fg_body_Nb3 = '../cas_EOs/Moon_EME2000.xva';
+% outputs_bin = '../cas_EOs/EOs_GTO_01as,50MCx120KF,t2_bin'; opterr=0.1;
+
 actual_traj = '../cas_EME/58122+SOI_v6.4_jdv000_312_vts.xyzv';
 fg_body_Nb3 = '../cas_EME/Mars_imcce.xva';
-% outputs_bin = '../cas_EME/outs/Eb+YECMJE_01as,400MCx192KF'; opterr=0.1;
-outputs_bin = '../cas_EME/outs/E0_ECMJE_01as,450MCx192KF,1393471_bin'; opterr=0.1;
-% outputs_bin = '../cas_Y/outs/Y0_41324_01as,400MCx192KF,1393470_bin';
+outputs_bin = '../cas_EME/outs/EYv4_01as,450MCx192KF,1420096_bin'; opterr=0.1;
+
+% actual_traj = '../cas_EOs/GTO_actl_EME2000_mini.xva';
+% fg_body_Nb3 = '../cas_EOs/Moon_EME2000.xva';
 % outputs_bin = '../cas_Y/outs/YYv4_01as,400MCx192KF,1420098_bin';
-% outputs_bin = '../ifod_tests/outs/Y0_41324v4_01as,400MCx192KF,t_bin'; % non-fonctionnel
-graphs = true;
-% graphs = false;
 
 T0N=datenum([2000 1 1 0 0 0]);
 T0JD=2451544.5;
@@ -310,15 +314,19 @@ end
 
 figure(302); clf;
 % subplot(2,1,1);
-semilogy(ep(1:ntStep),stats(1:ntStep,7),'--b');
+semilogy(ep(1:ntStep),stats(1:ntStep,7),'--b'); % sigma on LoS (w/o KF)
 hold on;
-set(gca, 'LooseInset', [0 0 0 0]); % semilogy(stats(1:ntStep,4),'--r');
-semilogy(ep(1:ntStep),stats(1:ntStep,8),'--k'); % semilogy(stats(1:ntStep,5),'--k'); 
-% semilogy(ep(1:ntStep),stats(1:ntStep,9),'--k'); % semilogy(stats(1:ntStep,6),'--k');
-semilogy(ep(1:ntStep),stdKF(1:ntStep,1),'-r'); % semilogy(stats(1:ntStep,6),'--k');
-semilogy(ep(1:ntStep),stdKF(1:ntStep,2),'-k'); % semilogy(stats(1:ntStep,6),'--k');
-% semilogy(ep(1:ntStep),stdKF(1:ntStep,3),'-k'); % semilogy(stats(1:ntStep,6),'--k');
-legend('LoS', 'LoS_y', 'LoS w.KF', 'LoS_y w.KF');
+set(gca, 'LooseInset', [0 0 0 0]);
+semilogy(ep(1:ntStep),stats(1:ntStep,8),'--r'); % sigma on LoS_Y or LoS_Z (w/o KF)
+semilogy(ep(1:ntStep),... 
+    ((stats(1:ntStep,8).^2).*stats(1:ntStep,7).*3./(4.*pi())).^(1/3.),...
+    '--k'); % spherical-equivalent sigma (w/o KF)
+semilogy(ep(1:ntStep),stdKF(1:ntStep,1),'-b'); % sigma on LoS (after KF)
+semilogy(ep(1:ntStep),stdKF(1:ntStep,2),'-r'); % sigma on LoS_Y or LoS_Z (after KF)
+semilogy(ep(1:ntStep),... 
+    ((stats(1:ntStep,2).^2).*stats(1:ntStep,1).*3./(4.*pi())).^(1/3.),...
+    '-k'); % spherical-equivalent sigma (after KF)
+legend('LoS', 'LoS_y', 'eq.-R', 'LoS w.KF', 'LoS_y w.KF', 'eq.-R w.KF', 'Location','Best');
 % legend('LoS', 'LoS_y', 'LoS_Z', 'LoS w.KF', 'LoS_y w.KF', 'LoS_Z w.KF');
 ylabel(['Standard deviation (km)']); xlabel('days');
 % hold off;
